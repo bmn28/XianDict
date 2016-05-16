@@ -77,6 +77,7 @@
     </ApplicationDefinition>
     <Compile Include="Cedict.cs" />
     <Compile Include="Moedict.cs" />
+    <Compile Include="Pinyin.cs" />
     <Compile Include="SQLite.cs" />
     <Compile Include="SQLiteAsync.cs" />
     <Page Include="MainWindow.xaml">
