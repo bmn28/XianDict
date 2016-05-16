@@ -23,6 +23,9 @@ namespace XianDict
         public MainWindow()
         {
             InitializeComponent();
+
+            var db = new DictionaryEngine();
+            this.Close();
         }
     }
 }

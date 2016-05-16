@@ -76,6 +76,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Cedict.cs" />
+    <Compile Include="Dict.cs" />
     <Compile Include="Moedict.cs" />
     <Compile Include="Pinyin.cs" />
     <Compile Include="SQLite.cs" />
@@ -126,9 +127,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="a.txt">
+    <None Include="a.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
+    </None>
     <Content Include="sqlite3.def">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
