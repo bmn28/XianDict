@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using SQLiteNetExtensionsAsync.Extensions;
+using SQLite.Net.Async;
 using SQLite.Net;
 using SQLite.Net.Attributes;
 using SQLiteNetExtensions.Attributes;
@@ -12,14 +15,14 @@ namespace XianDict
 {
     public class Cedict : Dict
     {
-        public Cedict() : base("CC-CEDICT", "cedict", "CC") { }
+        public Cedict(SQLiteAsyncConnection db) : base(db, "CC-CEDICT", "cedict", "CC") { }
 
-        public override void Build(SQLiteConnection db)
+        public override void Build()
         {
-            db.DropTable<CedictEntry>();
-            db.DropTable<CedictDefinition>();
-            db.CreateTable<CedictEntry>();
-            db.CreateTable<CedictDefinition>();
+            db.DropTableAsync<CedictEntry>();
+            db.DropTableAsync<CedictDefinition>();
+            db.CreateTableAsync<CedictEntry>();
+            db.CreateTableAsync<CedictDefinition>();
             Regex rx = new Regex(@"([^ ]+) ([^ ]+) \[([^]]+)] /(.+)/$");
             List<CedictEntry> entries = new List<CedictEntry>();
             List<CedictDefinition> definitions = new List<CedictDefinition>();
@@ -39,7 +42,7 @@ namespace XianDict
                     entries.Add(entry);
                 }
             }
-            db.InsertAll(entries);
+            db.InsertAllAsync(entries);
             foreach (var e in entries)
             {
                 foreach (var d in e.Definitions)
@@ -48,7 +51,40 @@ namespace XianDict
                     definitions.Add(d);
                 }
             }
-            db.InsertAll(definitions);
+            db.InsertAllAsync(definitions);
+        }
+
+        public override async Task<IEnumerable<SearchResult>> Search(CancellationToken ct, string query)
+        {
+            var results = new List<SearchResult>();
+            //try
+            {
+                //var entries = await db.Table<CedictEntry>().Where(p => p.Traditional.StartsWith(query)).ToListAsync();
+                var entries = await db.QueryAsync<CedictEntry>(ct, "SELECT * FROM CedictEntry e WHERE e.Traditional LIKE ? ESCAPE '\\'", query + "%");
+                foreach (var q in Pinyin.ToQueryForms(query))
+                {
+                    var newEntries = await db.QueryAsync<CedictEntry>(ct, "SELECT * FROM CedictEntry e WHERE e.Pinyin LIKE ? ESCAPE '\\'", q + "%");
+                    entries.AddRange(newEntries);
+
+                }
+
+
+                foreach (var s in entries)
+                {
+                    var definitions = await db.QueryAsync<CedictDefinition>(ct, "SELECT * FROM CedictDefinition WHERE EntryId = ?", s.Id);
+                    //var definitions = await db.Table<CedictDefinition>().Where(d => d.EntryId == s.Id).ToListAsync();
+                    results.Add(new SearchResult()
+                    {
+                        Traditional = s.Traditional,
+                        Simplified = s.Simplified,
+                        Pinyin = Pinyin.ConvertToAccents(s.Pinyin),
+                        PinyinNumbered = s.Pinyin,
+                        Definitions = new List<List<string>>() { new List<string>(from d in definitions select d.Definition) }
+                    });
+                }
+            }
+
+            return results;
         }
     }
 

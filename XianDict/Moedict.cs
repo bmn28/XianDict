@@ -3,36 +3,40 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 using SQLite.Net.Attributes;
 using Newtonsoft.Json;
 using SQLite.Net;
-using SQLiteNetExtensions.Attributes;
+using SQLite.Net.Async;
+using SQLiteNetExtensionsAsync;
 using System.Text.RegularExpressions;
+using SQLiteNetExtensionsAsync.Extensions;
+using SQLiteNetExtensions.Attributes;
 
 namespace XianDict
 {
     public class Moedict : Dict
     {
         private static Regex extractAlternateHeadword = new Regex(@"([^（]*)（(.*)[）)]$");
-        private static Regex extractAlternatePinyin = new Regex(@"([^（]*)（(.*)[）)](.*)");
+        private static Regex extractAlternatePinyin = new Regex(@"([^（\(]*)[（\(](.*)[）)](.*)");
 
-        public Moedict() : base("MoEDict", "moedict", "MOE") { }
+        public Moedict(SQLiteAsyncConnection db) : base(db, "MoEDict", "moedict", "MOE") { }
 
-        public override void Build(SQLiteConnection db)
+        public override void Build()
         {
             char[] space = new char[] { ' ' };
-            db.DropTable<MoedictEntry>();
-            db.DropTable<MoedictHeteronym>();
-            db.DropTable<MoedictDefinition>();
-            db.DropTable<MoedictQuote>();
-            db.DropTable<MoedictExample>();
-            db.DropTable<MoedictLink>();
-            db.CreateTable<MoedictEntry>();
-            db.CreateTable<MoedictHeteronym>();
-            db.CreateTable<MoedictDefinition>();
-            db.CreateTable<MoedictQuote>();
-            db.CreateTable<MoedictExample>();
-            db.CreateTable<MoedictLink>();
+            db.DropTableAsync<MoedictEntry>();
+            db.DropTableAsync<MoedictHeteronym>();
+            db.DropTableAsync<MoedictDefinition>();
+            db.DropTableAsync<MoedictQuote>();
+            db.DropTableAsync<MoedictExample>();
+            db.DropTableAsync<MoedictLink>();
+            db.CreateTableAsync<MoedictEntry>();
+            db.CreateTableAsync<MoedictHeteronym>();
+            db.CreateTableAsync<MoedictDefinition>();
+            db.CreateTableAsync<MoedictQuote>();
+            db.CreateTableAsync<MoedictExample>();
+            db.CreateTableAsync<MoedictLink>();
 
             string[] lines = System.IO.File.ReadAllLines("a.txt");
 
@@ -57,7 +61,7 @@ namespace XianDict
                 }
                 entries.Add(entry);
             }
-            db.InsertAll(entries);
+            db.InsertAllAsync(entries);
             foreach (var e in entries)
             {
                 foreach (var h in e.Heteronyms)
@@ -78,7 +82,7 @@ namespace XianDict
                     heteronyms.Add(h);
                 }
             }
-            db.InsertAll(heteronyms);
+            db.InsertAllAsync(heteronyms);
             foreach (var h in heteronyms)
             {
                 foreach (var d in h.Definitions)
@@ -87,7 +91,7 @@ namespace XianDict
                     definitions.Add(d);
                 }
             }
-            db.InsertAll(definitions);
+            db.InsertAllAsync(definitions);
             foreach (var d in definitions)
             {
                 if (d.Quotes != null)
@@ -112,11 +116,30 @@ namespace XianDict
                     }
                 }
             }
-            db.InsertAll(quotes);
-            db.InsertAll(examples);
-            db.InsertAll(links);
+            db.InsertAllAsync(quotes);
+            db.InsertAllAsync(examples);
+            db.InsertAllAsync(links);
         }
 
+        public override async Task<IEnumerable<SearchResult>> Search(CancellationToken ct, string query)
+        {
+            List<SearchResult> results = new List<SearchResult>();
+            //await db.QueryAsync(ct, "")
+
+            foreach (var s in await db.Table<MoedictEntry>().Where(s => s.Headword.StartsWith(query)).ToListAsync()) {
+                await db.GetChildrenAsync(s);
+                if (s.Heteronyms != null)
+                {
+                    foreach (var h in s.Heteronyms)
+                    {
+                        await db.GetChildrenAsync(h);
+                        results.Add(new SearchResult() { Traditional = s.Headword, Pinyin = h.Pinyin, PinyinNumbered = h.PinyinNumbered,
+                            Definitions = new List<List<string>>() { new List<string>(from d in h.Definitions select d.Definition.Replace("`", "").Replace("~", "")) } });
+                    }
+                }
+            }
+            return results;
+        }
     }
     public class MoedictEntry
     {
@@ -145,7 +168,7 @@ namespace XianDict
         [ForeignKey(typeof(MoedictEntry))]
         public int EntryId { get; set; }
         [ManyToOne]
-        public MoedictExample Entry { get; set; }
+        public MoedictEntry Entry { get; set; }
         [JsonProperty("p")]
         public string Pinyin { get; set; }
         public string AlternatePinyin { get; set; }
@@ -160,8 +183,7 @@ namespace XianDict
         public string AudioId { get; set; }
 
         [OneToMany(CascadeOperations = CascadeOperation.CascadeRead), JsonProperty("d")]
-        public MoedictDefinition[] Definitions { get; set; }
-
+        public List<MoedictDefinition> Definitions { get; set; }
     }
 
     public class MoedictDefinition
