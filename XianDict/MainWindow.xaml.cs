@@ -17,6 +17,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.IO.IsolatedStorage;
 
 namespace XianDict
 {
@@ -86,8 +87,6 @@ namespace XianDict
             engine = new DictionaryEngine();
             results = new ObservableCollection<Term>();
             this.DataContext = this;
-            
-            Query = "";
         }
 
         private async void Search(string query)
@@ -122,6 +121,26 @@ namespace XianDict
         {
             Search(query);
             Debug.WriteLine("Query = " + Query);
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            Properties.Settings.Default.LastQuery = Query;
+            Properties.Settings.Default.Save();
+            base.OnClosed(e);
+        }
+
+        protected override void OnInitialized(EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(Properties.Settings.Default.LastQuery))
+            {
+                Query = "";
+            }
+            else
+            {
+                Query = Properties.Settings.Default.LastQuery;
+            }
+            base.OnInitialized(e);
         }
     }
 
