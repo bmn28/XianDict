@@ -106,7 +106,7 @@ namespace XianDict
                     results.Add(result);
                 }
             }
-            catch (TaskCanceledException)
+            catch (Exception e) when (e is TaskCanceledException | e is OperationCanceledException)
             {
                 // ok
             }

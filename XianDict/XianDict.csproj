@@ -86,6 +86,7 @@
     <Compile Include="Cedict.cs" />
     <Compile Include="Dict.cs" />
     <Compile Include="DictionaryRenderer.cs" />
+    <Compile Include="Frequency.cs" />
     <Compile Include="Moedict.cs" />
     <Compile Include="Pinyin.cs" />
     <Compile Include="SearchResult.cs" />
@@ -139,6 +140,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="a.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="rawdict_utf16_65105_freq.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <Content Include="sqlite3.def">

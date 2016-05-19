@@ -19,6 +19,8 @@ namespace XianDict
 {
     public class DictionaryEngine
     {
+        private static FrequencyComparer freqComparer = new FrequencyComparer();
+
         private SQLiteAsyncConnection db;
         private ICollection<Dict> dictionaries;
 
@@ -46,36 +48,32 @@ namespace XianDict
                 {
                     d.AddToIndex();
                 }
-            }
 
+                ReadFrequencies();
+
+            }
         }
 
         public async Task<IEnumerable<IndexedTerm>> Search(CancellationToken ct, string query)
         {
-            var results = new List<IndexedTerm>();
-            results.AddRange(await db.QueryAsync<IndexedTerm>(ct, "SELECT * FROM IndexedTerm WHERE Traditional LIKE ? ESCAPE '\\'", query + "%"));
+            var results = new List<IndexedTermWithFreq>();
+            results.AddRange(await db.QueryAsync<IndexedTermWithFreq>(ct, "SELECT * FROM IndexedTerm LEFT JOIN Frequency ON Traditional = Hanzi WHERE Traditional LIKE ? ESCAPE '\\'", query + "%"));
             var queryForms = Pinyin.ToQueryForms(query);
             int numberOfForms = queryForms.Count();
             bool allowMultiCharacter = numberOfForms > 1 || (numberOfForms > 0 && queryForms.First().IndexOf(' ') != -1);
+            string limitLength = allowMultiCharacter ? "" : "Length = 1 AND ";
             foreach (var q in queryForms)
             {
                 if (!string.IsNullOrWhiteSpace(q))
                 {
-                    if (allowMultiCharacter)
-                    {
-                        results.AddRange(await db.QueryAsync<IndexedTerm>(ct,
-                            "SELECT * FROM (SELECT * FROM IndexedTerm WHERE PinyinNoNumbers LIKE ? ESCAPE '\\') "
-                            + " WHERE PinyinNumbered LIKE ?", Pinyin.RemoveNumbersAndUnderscore(q) + "%", q + "%"));
-                    }
-                    else
-                    {
-                        results.AddRange(await db.QueryAsync<IndexedTerm>(ct,
-                            "SELECT * FROM (SELECT * FROM IndexedTerm WHERE Length = 1 AND PinyinNoNumbers LIKE ? ESCAPE '\\') "
-                            + " WHERE PinyinNumbered LIKE ?", Pinyin.RemoveNumbersAndUnderscore(q) + "%", q + "%"));
-                    }
+
+                    results.AddRange(await db.QueryAsync<IndexedTermWithFreq>(ct,
+                        "SELECT * FROM (SELECT * FROM (SELECT * FROM IndexedTerm WHERE " + limitLength + "PinyinNoNumbers LIKE ? ESCAPE '\\') "
+                        + " WHERE PinyinNumbered LIKE ?) LEFT JOIN Frequency ON Simplified = Hanzi OR Traditional = Hanzi", Pinyin.RemoveNumbersAndUnderscore(q) + "%", q + "%"));
+
                 }
             }
-            return results.OrderBy(r => r.Length).ThenBy(r => r.PinyinNumbered);
+            return results.OrderBy(r => r.Length).ThenBy(r => r.PinyinNumbered.Length).ThenByDescending(r => r.Score, freqComparer).ThenBy(r => r.PinyinNumbered);
         }
 
     //    public async Task<IEnumerable<SearchResult>> Search(CancellationToken ct, string query)
@@ -125,8 +123,39 @@ namespace XianDict
     //        //results.AddRange(resultsMiddle);
     //        return results;
     //    }
+
+        private void ReadFrequencies()
+        {
+            db.CreateTableAsync<Frequency>().Wait();
+            var frequencies = new List<Frequency>();
+            var space = new char[] { ' ' };
+            foreach (string line in File.ReadLines("rawdict_utf16_65105_freq.txt"))
+            {
+                var tokens = line.Split(space);
+                frequencies.Add(new Frequency()
+                {
+                    Hanzi = tokens[0],
+                    Score = float.Parse(tokens[1])
+                });
+            }
+            db.InsertAllAsync(frequencies).Wait();
+        }
     }
 
+    public class FrequencyComparer : IComparer<float?>
+    {
+        public int Compare(float? x, float? y)
+        {
+            if (x == null && y == null)
+                return 0;
+            else if (x == null)
+                return -1;
+            else if (y == null)
+                return 1;
+            else
+                return ((float)x).CompareTo((float)y);
+        }
+    }
 
     public class IndexedTerm
     {
@@ -145,6 +174,10 @@ namespace XianDict
         public int Length { get; set; }
         public string TableName { get; set; }
         public int TableId { get; set; }
+    }
+    public class IndexedTermWithFreq : IndexedTerm
+    {
+        public float? Score { get; set; }
     }
 
 }
