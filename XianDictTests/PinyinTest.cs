@@ -43,6 +43,7 @@ namespace XianDictTests
             Pinyin.ToQueryForms("xi'an");
             Pinyin.ToQueryForms("");
             Pinyin.ToQueryForms("中文");
+            Pinyin.ToQueryForms("abbbbbb");
         }
 
         [TestMethod]
