@@ -22,46 +22,22 @@ namespace XianDict
 
         public Moedict(SQLiteAsyncConnection db) : base(db, "MoEDict", "moedict", "MOE") { }
 
-        public override void AddToIndex()
-        {
-            var entries = db.QueryAsync<MoedictHeteronymLookupForm>(
-                "SELECT h.Id AS Id, Headword AS Traditional, Pinyin, PinyinNumbered "
-                + "FROM MoedictHeteronym h LEFT JOIN MoedictEntry e ON h.EntryId = e.Id").Result;
-
-            var indices = new List<IndexedTerm>();
-            foreach (var entry in entries)
-            {
-                IndexedTerm index = new IndexedTerm()
-                {
-                    Traditional = entry.Traditional,
-                    Simplified = "",
-                    Pinyin = entry.Pinyin,
-                    PinyinNumbered = entry.PinyinNumbered,
-                    PinyinNoNumbers = Pinyin.RemoveNumbersAndUnderscore(entry.Pinyin),
-                    Length = entry.Traditional.Length,
-                    TableId = entry.Id,
-                    TableName = "MoedictHeteronym",
-                };
-                indices.Add(index);
-            }
-            db.InsertAllAsync(indices).Wait();
-        }
-
         public override void Build()
         {
             char[] space = new char[] { ' ' };
-            db.DropTableAsync<MoedictEntry>();
-            db.DropTableAsync<MoedictHeteronym>();
-            db.DropTableAsync<MoedictDefinition>();
-            db.DropTableAsync<MoedictQuote>();
-            db.DropTableAsync<MoedictExample>();
-            db.DropTableAsync<MoedictLink>();
-            db.CreateTableAsync<MoedictEntry>();
-            db.CreateTableAsync<MoedictHeteronym>();
-            db.CreateTableAsync<MoedictDefinition>();
-            db.CreateTableAsync<MoedictQuote>();
-            db.CreateTableAsync<MoedictExample>();
-            db.CreateTableAsync<MoedictLink>();
+
+            db.DropTableAsync<MoedictEntry>().Wait();
+            db.DropTableAsync<MoedictHeteronym>().Wait();
+            db.DropTableAsync<MoedictDefinition>().Wait();
+            db.DropTableAsync<MoedictQuote>().Wait();
+            db.DropTableAsync<MoedictExample>().Wait();
+            db.DropTableAsync<MoedictLink>().Wait();
+            db.CreateTableAsync<MoedictEntry>().Wait();
+            db.CreateTableAsync<MoedictHeteronym>().Wait();
+            db.CreateTableAsync<MoedictDefinition>().Wait();
+            db.CreateTableAsync<MoedictQuote>().Wait();
+            db.CreateTableAsync<MoedictExample>().Wait();
+            db.CreateTableAsync<MoedictLink>().Wait();
 
             string[] lines = System.IO.File.ReadAllLines("a.txt");
 
@@ -86,7 +62,7 @@ namespace XianDict
                 }
                 entries.Add(entry);
             }
-            db.InsertAllAsync(entries);
+            db.InsertAllAsync(entries).Wait();
             foreach (var e in entries)
             {
                 foreach (var h in e.Heteronyms)
@@ -107,7 +83,7 @@ namespace XianDict
                     heteronyms.Add(h);
                 }
             }
-            db.InsertAllAsync(heteronyms);
+            db.InsertAllAsync(heteronyms).Wait();
             foreach (var h in heteronyms)
             {
                 foreach (var d in h.Definitions)
@@ -116,7 +92,7 @@ namespace XianDict
                     definitions.Add(d);
                 }
             }
-            db.InsertAllAsync(definitions);
+            db.InsertAllAsync(definitions).Wait();
             foreach (var d in definitions)
             {
                 if (d.Quotes != null)
@@ -141,9 +117,38 @@ namespace XianDict
                     }
                 }
             }
-            db.InsertAllAsync(quotes);
-            db.InsertAllAsync(examples);
-            db.InsertAllAsync(links);
+            db.InsertAllAsync(quotes).Wait();
+            db.InsertAllAsync(examples).Wait();
+            db.InsertAllAsync(links).Wait();
+        }
+
+        public override void AddToIndex(Dictionary<Tuple<string, string>, Term> index)
+        {
+            var entries = db.QueryAsync<MoedictHeteronymLookupForm>(
+                "SELECT h.Id AS Id, Headword AS Traditional, Pinyin, PinyinNumbered "
+                + "FROM MoedictHeteronym h LEFT JOIN MoedictEntry e ON h.EntryId = e.Id").Result;
+            foreach (var entry in entries)
+            {
+                var key = Tuple.Create(entry.Traditional, entry.PinyinNumbered);
+                Term term;
+                if (index.TryGetValue(key, out term))
+                {
+                    term.MoedictHeteronymId = entry.Id;
+                }
+                else
+                {
+                    term = new Term()
+                    {
+                        Traditional = entry.Traditional,
+                        Simplified = "",
+                        Pinyin = entry.Pinyin,
+                        PinyinNumbered = entry.PinyinNumbered,
+                        PinyinNoNumbers = Pinyin.RemoveNumbersAndUnderscore(entry.Pinyin),
+                        Length = entry.Traditional.Length,
+                    };
+                    index[key] = term;
+                }
+            }
         }
 
         public override async Task<IEnumerable<SearchResult>> Search(CancellationToken ct, string query)

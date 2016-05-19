@@ -41,23 +41,26 @@ namespace XianDict
                 {
                     d.Build();
                 }
-                db.DropTableAsync<IndexedTerm>().Wait();
-                db.CreateTableAsync<IndexedTerm>().Wait();
+                db.DropTableAsync<Term>().Wait();
+                db.CreateTableAsync<Term>().Wait();
+
+                Dictionary<Tuple<string, string>, Term> index = new Dictionary<Tuple<string, string>, Term>();
 
                 foreach (var d in dictionaries)
                 {
-                    d.AddToIndex();
+                    d.AddToIndex(index);
                 }
 
+                db.InsertAllAsync(index.Values).Wait();
+            
                 ReadFrequencies();
-
             }
         }
 
-        public async Task<IEnumerable<IndexedTerm>> Search(CancellationToken ct, string query)
+        public async Task<IEnumerable<Term>> Search(CancellationToken ct, string query)
         {
             var results = new List<IndexedTermWithFreq>();
-            results.AddRange(await db.QueryAsync<IndexedTermWithFreq>(ct, "SELECT * FROM IndexedTerm LEFT JOIN Frequency ON Traditional = Hanzi WHERE Traditional LIKE ? ESCAPE '\\'", query + "%"));
+            results.AddRange(await db.QueryAsync<IndexedTermWithFreq>(ct, "SELECT * FROM Term LEFT JOIN Frequency ON Traditional = Hanzi WHERE Traditional LIKE ? ESCAPE '\\'", query + "%"));
             var queryForms = Pinyin.ToQueryForms(query);
             int numberOfForms = queryForms.Count();
             bool allowMultiCharacter = numberOfForms > 1 || (numberOfForms > 0 && queryForms.First().IndexOf(' ') != -1);
@@ -68,7 +71,7 @@ namespace XianDict
                 {
 
                     results.AddRange(await db.QueryAsync<IndexedTermWithFreq>(ct,
-                        "SELECT * FROM (SELECT * FROM (SELECT * FROM IndexedTerm WHERE " + limitLength + "PinyinNoNumbers LIKE ? ESCAPE '\\') "
+                        "SELECT * FROM (SELECT * FROM (SELECT * FROM Term WHERE " + limitLength + "PinyinNoNumbers LIKE ? ESCAPE '\\') "
                         + " WHERE PinyinNumbered LIKE ?) LEFT JOIN Frequency ON Simplified = Hanzi OR Traditional = Hanzi", Pinyin.RemoveNumbersAndUnderscore(q) + "%", q + "%"));
 
                 }
@@ -157,7 +160,7 @@ namespace XianDict
         }
     }
 
-    public class IndexedTerm
+    public class Term
     {
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }
@@ -172,10 +175,16 @@ namespace XianDict
         public string PinyinNoNumbers { get; set; }
         [Indexed]
         public int Length { get; set; }
-        public string TableName { get; set; }
-        public int TableId { get; set; }
+        [ForeignKey(typeof(CedictEntry))]
+        public int CedictEntryId { get; set; }
+        [OneToOne]
+        public CedictEntry CedictEntry { get; set; }
+        [ForeignKey(typeof(MoedictHeteronym))]
+        public int MoedictHeteronymId { get; set; }
+        [OneToOne]
+        public MoedictHeteronym MoedictHeteronym { get; set; }
     }
-    public class IndexedTermWithFreq : IndexedTerm
+    public class IndexedTermWithFreq : Term
     {
         public float? Score { get; set; }
     }

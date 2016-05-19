@@ -17,36 +17,43 @@ namespace XianDict
     {
         public Cedict(SQLiteAsyncConnection db) : base(db, "CC-CEDICT", "cedict", "CC") { }
 
-        public override void AddToIndex()
+        public override void AddToIndex(Dictionary<Tuple<string, string>, Term> index)
         {
             var task = db.Table<CedictEntry>().ToListAsync();
             var entries = task.Result;
-            var indices = new List<IndexedTerm>();
+            var indices = new List<Term>();
 
             foreach (var entry in entries)
             {
-                IndexedTerm index = new IndexedTerm()
+                var key = Tuple.Create(entry.Traditional, entry.Pinyin);
+                Term term;
+                if (index.TryGetValue(key, out term))
                 {
-                    Traditional = entry.Traditional,
-                    Simplified = entry.Simplified,
-                    Pinyin = Pinyin.ConvertToAccents(entry.Pinyin),
-                    PinyinNumbered = entry.Pinyin,
-                    PinyinNoNumbers = Pinyin.RemoveNumbersAndUnderscore(entry.Pinyin),
-                    Length = entry.Traditional.Length,
-                    TableName = "CedictEntry",
-                    TableId = entry.Id
-                };
-                indices.Add(index);
+                    term.CedictEntryId = entry.Id;
+                }
+                else
+                {
+                    term = new Term()
+                    {
+                        Traditional = entry.Traditional,
+                        Simplified = entry.Simplified,
+                        Pinyin = Pinyin.ConvertToAccents(entry.Pinyin),
+                        PinyinNumbered = entry.Pinyin,
+                        PinyinNoNumbers = Pinyin.RemoveNumbersAndUnderscore(entry.Pinyin),
+                        Length = entry.Traditional.Length,
+                        CedictEntryId = entry.Id
+                    };
+                    index[key] = term;
+                }
             }
-            db.InsertAllAsync(indices).Wait();
         }
 
         public override void Build()
         {
-            db.DropTableAsync<CedictEntry>();
-            db.DropTableAsync<CedictDefinition>();
-            db.CreateTableAsync<CedictEntry>();
-            db.CreateTableAsync<CedictDefinition>();
+            db.DropTableAsync<CedictEntry>().Wait();
+            db.DropTableAsync<CedictDefinition>().Wait();
+            db.CreateTableAsync<CedictEntry>().Wait();
+            db.CreateTableAsync<CedictDefinition>().Wait();
             Regex rx = new Regex(@"([^ ]+) ([^ ]+) \[([^]]+)] /(.+)/$");
             List<CedictEntry> entries = new List<CedictEntry>();
             List<CedictDefinition> definitions = new List<CedictDefinition>();
@@ -66,7 +73,7 @@ namespace XianDict
                     entries.Add(entry);
                 }
             }
-            db.InsertAllAsync(entries);
+            db.InsertAllAsync(entries).Wait();
             foreach (var e in entries)
             {
                 foreach (var d in e.Definitions)
@@ -75,7 +82,7 @@ namespace XianDict
                     definitions.Add(d);
                 }
             }
-            db.InsertAllAsync(definitions);
+            db.InsertAllAsync(definitions).Wait();
         }
 
         public override async Task<IEnumerable<SearchResult>> Search(CancellationToken ct, string query)

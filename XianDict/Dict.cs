@@ -28,7 +28,7 @@ namespace XianDict
 
         public abstract void Build();
 
-        public abstract void AddToIndex();
+        public abstract void AddToIndex(Dictionary<Tuple<string, string>, Term> index);
 
         public abstract Task<IEnumerable<SearchResult>> Search(CancellationToken ct, string query);
     }

@@ -33,9 +33,9 @@ namespace XianDict
         private DictionaryEngine engine;
         private string query;
         private SearchMode searchMode;
-        public ObservableCollection<IndexedTerm> results { get; set; }
-        private IndexedTerm selectedEntry;
-        public IndexedTerm SelectedEntry
+        public ObservableCollection<Term> results { get; set; }
+        private Term selectedEntry;
+        public Term SelectedEntry
         {
             get
             {
@@ -84,7 +84,7 @@ namespace XianDict
         {
             InitializeComponent();
             engine = new DictionaryEngine();
-            results = new ObservableCollection<IndexedTerm>();
+            results = new ObservableCollection<Term>();
             this.DataContext = this;
             
             Query = "";
