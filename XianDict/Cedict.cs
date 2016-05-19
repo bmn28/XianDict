@@ -20,9 +20,7 @@ namespace XianDict
         public override void AddToIndex()
         {
             var task = db.Table<CedictEntry>().ToListAsync();
-            //task.RunSynchronously();
             var entries = task.Result;
-
             var indices = new List<IndexedTerm>();
 
             foreach (var entry in entries)
@@ -40,7 +38,7 @@ namespace XianDict
                 };
                 indices.Add(index);
             }
-            db.InsertAllAsync(indices);
+            db.InsertAllAsync(indices).Wait();
         }
 
         public override void Build()

@@ -44,7 +44,7 @@ namespace XianDict
                 };
                 indices.Add(index);
             }
-            db.InsertAllAsync(indices);
+            db.InsertAllAsync(indices).Wait();
         }
 
         public override void Build()

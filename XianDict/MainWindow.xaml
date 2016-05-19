@@ -19,7 +19,7 @@
 
             </Grid.ColumnDefinitions>
             <TextBox x:Name="searchBox" Grid.Column="0" Height="23" Width="Auto" Margin="0" TextWrapping="Wrap" VerticalAlignment="Top"
-                 Text="{Binding Path=Query, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                 Text="{Binding Path=Query, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="searchBox_TextChanged" />
             <Button x:Name="button" Content="Chinese" Grid.Column="1" Margin="5,0,0,0" VerticalAlignment="Top" Height="23" Width="75" HorizontalAlignment="Left" Click="button_Click"/>
         </Grid>
 
@@ -186,13 +186,13 @@
                             <TextBlock Text="{Binding Pinyin}" VerticalAlignment="Bottom"/>
                         </WrapPanel>
                         <WrapPanel MaxHeight="48" >
-                            <ItemsControl ItemsSource="{Binding Definitions[0]}">
+                            <!--<ItemsControl ItemsSource="{Binding Definitions[0]}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <TextBlock Text="{Binding}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" />
                                     </DataTemplate>
                             </ItemsControl.ItemTemplate>
-                        </ItemsControl>   
+                        </ItemsControl>-->   
                         </WrapPanel>
                  
                     </StackPanel>

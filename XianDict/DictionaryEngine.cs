@@ -39,27 +39,31 @@ namespace XianDict
                 {
                     d.Build();
                 }
+                db.DropTableAsync<IndexedTerm>().Wait();
+                db.CreateTableAsync<IndexedTerm>().Wait();
+
+                foreach (var d in dictionaries)
+                {
+                    d.AddToIndex();
+                }
             }
 
-            db.DropTableAsync<IndexedTerm>();
-            db.CreateTableAsync<IndexedTerm>();
-
-            foreach (var d in dictionaries)
-            {
-                d.AddToIndex();
-            }
         }
 
-        public async Task<IEnumerable<IndexedTerm>> Search(string query)
+        public async Task<IEnumerable<IndexedTerm>> Search(CancellationToken ct, string query)
         {
             var results = new List<IndexedTerm>();
-            results.AddRange(await db.QueryAsync<IndexedTerm>("SELECT * FROM IndexedTerm WHERE Traditional LIKE ?", query + "%"));
+            results.AddRange(await db.QueryAsync<IndexedTerm>(ct, "SELECT * FROM IndexedTerm WHERE Traditional LIKE ? ESCAPE '\\'", query + "%"));
             foreach (var q in Pinyin.ToQueryForms(query))
             {
-                var noNumbers = Pinyin.RemoveNumbersAndUnderscore(q);
-                results.AddRange(await db.QueryAsync<IndexedTerm>("SELECT * FROM IndexedTerm WHERE PinyinNumbered LIKE ?", q + "%"));
+                if (!string.IsNullOrWhiteSpace(q))
+                {
+                    results.AddRange(await db.QueryAsync<IndexedTerm>(ct,
+                        "SELECT * FROM (SELECT * FROM IndexedTerm WHERE PinyinNoNumbers LIKE ? ESCAPE '\\') "
+                        + " WHERE PinyinNumbered LIKE ?", Pinyin.RemoveNumbersAndUnderscore(q) + "%", q + "%"));
+                }
             }
-            return results.OrderBy(r => r.Length);
+            return results.OrderBy(r => r.Length).ThenBy(r => r.PinyinNumbered);
         }
 
     //    public async Task<IEnumerable<SearchResult>> Search(CancellationToken ct, string query)

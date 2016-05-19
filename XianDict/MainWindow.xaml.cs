@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -71,7 +72,7 @@ namespace XianDict
                 if (query == null || !query.Equals(value))
                 {
                     query = value;
-                    Search(query);
+
                 }
                 OnPropertyChanged("Query");
             }
@@ -85,21 +86,29 @@ namespace XianDict
             engine = new DictionaryEngine();
             results = new ObservableCollection<IndexedTerm>();
             this.DataContext = this;
-
+            
             Query = "";
         }
 
         private async void Search(string query)
         {
-            //cts.Cancel(false);
-            //cts.
+            cts.Cancel();
+            cts = new CancellationTokenSource();
+
             if (string.IsNullOrWhiteSpace(query))
                 return;
-            var newResults = await engine.Search(query);
-            results.Clear();
-            foreach (var result in newResults)
+            try
             {
-                results.Add(result);
+                var newResults = await engine.Search(cts.Token, query);
+                results.Clear();
+                foreach (var result in newResults.Take(1000))
+                {
+                    results.Add(result);
+                }
+            }
+            catch (TaskCanceledException)
+            {
+                // ok
             }
         }
 
@@ -107,6 +116,12 @@ namespace XianDict
         {
             searchMode = (SearchMode)(((int)searchMode + 1) % Enum.GetNames(typeof(SearchMode)).Length);
             button.Content = searchMode.ToString();
+        }
+
+        private void searchBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            Search(query);
+            Debug.WriteLine("Query = " + Query);
         }
     }
 
