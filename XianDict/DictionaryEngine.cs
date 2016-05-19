@@ -54,13 +54,25 @@ namespace XianDict
         {
             var results = new List<IndexedTerm>();
             results.AddRange(await db.QueryAsync<IndexedTerm>(ct, "SELECT * FROM IndexedTerm WHERE Traditional LIKE ? ESCAPE '\\'", query + "%"));
-            foreach (var q in Pinyin.ToQueryForms(query))
+            var queryForms = Pinyin.ToQueryForms(query);
+            int numberOfForms = queryForms.Count();
+            bool allowMultiCharacter = numberOfForms > 1 || (numberOfForms > 0 && queryForms.First().IndexOf(' ') != -1);
+            foreach (var q in queryForms)
             {
                 if (!string.IsNullOrWhiteSpace(q))
                 {
-                    results.AddRange(await db.QueryAsync<IndexedTerm>(ct,
-                        "SELECT * FROM (SELECT * FROM IndexedTerm WHERE PinyinNoNumbers LIKE ? ESCAPE '\\') "
-                        + " WHERE PinyinNumbered LIKE ?", Pinyin.RemoveNumbersAndUnderscore(q) + "%", q + "%"));
+                    if (allowMultiCharacter)
+                    {
+                        results.AddRange(await db.QueryAsync<IndexedTerm>(ct,
+                            "SELECT * FROM (SELECT * FROM IndexedTerm WHERE PinyinNoNumbers LIKE ? ESCAPE '\\') "
+                            + " WHERE PinyinNumbered LIKE ?", Pinyin.RemoveNumbersAndUnderscore(q) + "%", q + "%"));
+                    }
+                    else
+                    {
+                        results.AddRange(await db.QueryAsync<IndexedTerm>(ct,
+                            "SELECT * FROM (SELECT * FROM IndexedTerm WHERE Length = 1 AND PinyinNoNumbers LIKE ? ESCAPE '\\') "
+                            + " WHERE PinyinNumbered LIKE ?", Pinyin.RemoveNumbersAndUnderscore(q) + "%", q + "%"));
+                    }
                 }
             }
             return results.OrderBy(r => r.Length).ThenBy(r => r.PinyinNumbered);
