@@ -179,7 +179,7 @@
             </ListBox.ItemContainerStyle>
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <StackPanel>
+                    <StackPanel Margin="1">
                         <WrapPanel>
                             <TextBlock Text="{Binding Traditional}" FontSize="20" FontFamily="Microsoft JhengHei"  />
                             <TextBlock Text=" " />
