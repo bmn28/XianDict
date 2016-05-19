@@ -63,9 +63,9 @@ namespace XianDictTests
         [TestMethod]
         public void Pinyin_RemoveNumbers_Test()
         {
-            Assert.AreEqual(Pinyin.RemoveNumbersAndQuestionMark(""), "");
-            Assert.AreEqual(Pinyin.RemoveNumbersAndQuestionMark("tian1"), "tian");
-            Assert.AreEqual(Pinyin.RemoveNumbersAndQuestionMark("tian1xia4 wei?gong"), "tianxia weigong");
+            Assert.AreEqual(Pinyin.RemoveNumbersAndUnderscore(""), "");
+            Assert.AreEqual(Pinyin.RemoveNumbersAndUnderscore("tian1"), "tian");
+            Assert.AreEqual(Pinyin.RemoveNumbersAndUnderscore("tian1xia4 wei?gong"), "tianxia weigong");
         }
     }
 }

@@ -15,7 +15,7 @@ namespace XianDict
         public static Regex GroupBySpaces = new Regex(@"([^ ]+)");
         public static Regex UnmarkedSyllables = new Regex(@"((?>[A-ZÜa-zü]+))(?![12345])");
         public static Regex Numbers = new Regex(@"([12345])");
-        public static Regex NumbersAndQuestionMark = new Regex(@"([12345\?])");
+        public static Regex NumbersAndUnderscore = new Regex(@"([12345]|(?<!_)_)");
         public static Regex NumbersAtEndOrNotFollowedBySpace = new Regex(@"([12345\?])(?! |$)");
         public static Regex Umlauts = new Regex(@"[üÜ]");
         public static Regex UmlautCandidates = new Regex(@"(nu|lu|nue|lue)", RegexOptions.IgnoreCase);
@@ -145,9 +145,9 @@ namespace XianDict
             return queries;
         }
 
-        public static string RemoveNumbersAndQuestionMark(string input)
+        public static string RemoveNumbersAndUnderscore(string input)
         {
-            return input == null ? null : NumbersAndQuestionMark.Replace(input, "");
+            return input == null ? null : NumbersAndUnderscore.Replace(input, "");
         }
 
         private static List<List<string>> findRuns(string input, bool allowPartialAtEnd)
