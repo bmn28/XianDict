@@ -32,9 +32,9 @@ namespace XianDict
         private DictionaryEngine engine;
         private string query;
         private SearchMode searchMode;
-        public ObservableCollection<SearchResult> results { get; set; }
-        private SearchResult selectedEntry;
-        public SearchResult SelectedEntry
+        public ObservableCollection<IndexedTerm> results { get; set; }
+        private IndexedTerm selectedEntry;
+        public IndexedTerm SelectedEntry
         {
             get
             {
@@ -83,7 +83,7 @@ namespace XianDict
         {
             InitializeComponent();
             engine = new DictionaryEngine();
-            results = new ObservableCollection<SearchResult>();
+            results = new ObservableCollection<IndexedTerm>();
             this.DataContext = this;
 
             Query = "";
@@ -95,18 +95,11 @@ namespace XianDict
             //cts.
             if (string.IsNullOrWhiteSpace(query))
                 return;
-            try
+            var newResults = await engine.Search(query);
+            results.Clear();
+            foreach (var result in newResults)
             {
-                var newResults = await engine.Search(cts.Token, query);
-                results.Clear();
-                foreach (var result in newResults)
-                {
-                    results.Add(result);
-                }
-            }
-            catch (TaskCanceledException e)
-            {
-                ;
+                results.Add(result);
             }
         }
 

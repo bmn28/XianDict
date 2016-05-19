@@ -22,6 +22,31 @@ namespace XianDict
 
         public Moedict(SQLiteAsyncConnection db) : base(db, "MoEDict", "moedict", "MOE") { }
 
+        public override void AddToIndex()
+        {
+            var entries = db.QueryAsync<MoedictHeteronymLookupForm>(
+                "SELECT h.Id AS Id, Headword AS Traditional, Pinyin, PinyinNumbered "
+                + "FROM MoedictHeteronym h LEFT JOIN MoedictEntry e ON h.EntryId = e.Id").Result;
+
+            var indices = new List<IndexedTerm>();
+            foreach (var entry in entries)
+            {
+                IndexedTerm index = new IndexedTerm()
+                {
+                    Traditional = entry.Traditional,
+                    Simplified = "",
+                    Pinyin = entry.Pinyin,
+                    PinyinNumbered = entry.PinyinNumbered,
+                    PinyinNoNumbers = Pinyin.RemoveNumbersAndUnderscore(entry.Pinyin),
+                    Length = entry.Traditional.Length,
+                    TableId = entry.Id,
+                    TableName = "MoedictHeteronym",
+                };
+                indices.Add(index);
+            }
+            db.InsertAllAsync(indices);
+        }
+
         public override void Build()
         {
             char[] space = new char[] { ' ' };
@@ -184,6 +209,14 @@ namespace XianDict
 
         [OneToMany(CascadeOperations = CascadeOperation.CascadeRead), JsonProperty("d")]
         public List<MoedictDefinition> Definitions { get; set; }
+    }
+
+    public class MoedictHeteronymLookupForm
+    {
+        public int Id { get; set; }
+        public string Traditional { get; set; }
+        public string Pinyin { get; set; }
+        public string PinyinNumbered { get; set; }
     }
 
     public class MoedictDefinition

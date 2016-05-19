@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using SQLite.Net;
 using SQLite.Net.Async;
+using System.Data;
 
 namespace XianDict
 {
@@ -26,6 +27,8 @@ namespace XianDict
         }
 
         public abstract void Build();
+
+        public abstract void AddToIndex();
 
         public abstract Task<IEnumerable<SearchResult>> Search(CancellationToken ct, string query);
     }

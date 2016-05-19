@@ -13,6 +13,7 @@ using SQLiteNetExtensions.Extensions;
 using System.Text.RegularExpressions;
 using SQLite.Net.Async;
 using System.Threading;
+using System.Data;
 
 namespace XianDict
 {
@@ -40,61 +41,94 @@ namespace XianDict
                 }
             }
 
-
-            var cedictEntries = db.Table<CedictEntry>();
-            var moedictEntries = db.Table<MoedictEntry>();
-            var moedictHeteronyms = db.Table<MoedictHeteronym>();
-            //var query = from c in cedictEntries
-            //            join e in moedictEntries
-        }
-
-
-        public async Task<IEnumerable<SearchResult>> Search(CancellationToken ct, string query)
-        {
-            var map = new Dictionary<string, Dictionary<string, SearchResult>>();
-            var results = new List<SearchResult>();
-            var resultsBegin = new List<SearchResult>();
-            //var resultsMiddle = new List<SearchResult>();
+            db.DropTableAsync<IndexedTerm>();
+            db.CreateTableAsync<IndexedTerm>();
 
             foreach (var d in dictionaries)
             {
-                foreach (var r in await d.Search(ct, query))
-                {
-                    Dictionary<string, SearchResult> entry;
-                    if (map.TryGetValue(r.Traditional, out entry))
-                    {
-                        SearchResult existingResult;
-                        if (map[r.Traditional].TryGetValue(r.PinyinNumbered, out existingResult))
-                        {
-                            existingResult.Definitions.AddRange(r.Definitions);
-                        }
-                    }
-                    else
-                    {
-                        var newDict = new Dictionary<string, SearchResult>();
-                        map[r.Traditional] = newDict;
-                        newDict[r.PinyinNumbered] = r;
-                    }
-                }
+                d.AddToIndex();
             }
-            foreach (var e in map)
-            {
-                foreach (var h in e.Value)
-                {
-                    //if (h.Value.Traditional.Equals(query))
-                        results.Add(h.Value);
-                    //else if (h.Value.Traditional.StartsWith(query))
-                    //    resultsBegin.Add(h.Value);
-                    //else
-                        //resultsMiddle.Add(h.Value);
-                }
-            }
-            results.Sort();
-            resultsBegin.Sort();
-            //resultsMiddle.Sort();
-            results.AddRange(resultsBegin);
-            //results.AddRange(resultsMiddle);
-            return results;
         }
+
+        public async Task<IEnumerable<IndexedTerm>> Search(string query)
+        {
+            var results = new List<IndexedTerm>();
+            results.AddRange(await db.QueryAsync<IndexedTerm>("SELECT * FROM IndexedTerm WHERE Traditional LIKE ?", query + "%"));
+            foreach (var q in Pinyin.ToQueryForms(query))
+            {
+                var noNumbers = Pinyin.RemoveNumbersAndUnderscore(q);
+                results.AddRange(await db.QueryAsync<IndexedTerm>("SELECT * FROM IndexedTerm WHERE PinyinNumbered LIKE ?", q + "%"));
+            }
+            return results.OrderBy(r => r.Length);
+        }
+
+    //    public async Task<IEnumerable<SearchResult>> Search(CancellationToken ct, string query)
+    //    {
+    //        var map = new Dictionary<string, Dictionary<string, SearchResult>>();
+    //        var results = new List<SearchResult>();
+    //        var resultsBegin = new List<SearchResult>();
+    //        //var resultsMiddle = new List<SearchResult>();
+
+    //        foreach (var d in dictionaries)
+    //        {
+    //            foreach (var r in await d.Search(ct, query))
+    //            {
+    //                Dictionary<string, SearchResult> entry;
+    //                if (map.TryGetValue(r.Traditional, out entry))
+    //                {
+    //                    SearchResult existingResult;
+    //                    if (map[r.Traditional].TryGetValue(r.PinyinNumbered, out existingResult))
+    //                    {
+    //                        existingResult.Definitions.AddRange(r.Definitions);
+    //                    }
+    //                }
+    //                else
+    //                {
+    //                    var newDict = new Dictionary<string, SearchResult>();
+    //                    map[r.Traditional] = newDict;
+    //                    newDict[r.PinyinNumbered] = r;
+    //                }
+    //            }
+    //        }
+    //        foreach (var e in map)
+    //        {
+    //            foreach (var h in e.Value)
+    //            {
+    //                //if (h.Value.Traditional.Equals(query))
+    //                    results.Add(h.Value);
+    //                //else if (h.Value.Traditional.StartsWith(query))
+    //                //    resultsBegin.Add(h.Value);
+    //                //else
+    //                    //resultsMiddle.Add(h.Value);
+    //            }
+    //        }
+    //        results.Sort();
+    //        resultsBegin.Sort();
+    //        //resultsMiddle.Sort();
+    //        results.AddRange(resultsBegin);
+    //        //results.AddRange(resultsMiddle);
+    //        return results;
+    //    }
     }
+
+
+    public class IndexedTerm
+    {
+        [PrimaryKey, AutoIncrement]
+        public int Id { get; set; }
+        [Indexed]
+        public string Traditional { get; set; }
+        [Indexed]
+        public string Simplified { get; set; }
+        public string Pinyin { get; set; }
+        [Indexed]
+        public string PinyinNumbered { get; set; }
+        [Indexed]
+        public string PinyinNoNumbers { get; set; }
+        [Indexed]
+        public int Length { get; set; }
+        public string TableName { get; set; }
+        public int TableId { get; set; }
+    }
+
 }

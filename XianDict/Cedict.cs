@@ -17,6 +17,32 @@ namespace XianDict
     {
         public Cedict(SQLiteAsyncConnection db) : base(db, "CC-CEDICT", "cedict", "CC") { }
 
+        public override void AddToIndex()
+        {
+            var task = db.Table<CedictEntry>().ToListAsync();
+            //task.RunSynchronously();
+            var entries = task.Result;
+
+            var indices = new List<IndexedTerm>();
+
+            foreach (var entry in entries)
+            {
+                IndexedTerm index = new IndexedTerm()
+                {
+                    Traditional = entry.Traditional,
+                    Simplified = entry.Simplified,
+                    Pinyin = Pinyin.ConvertToAccents(entry.Pinyin),
+                    PinyinNumbered = entry.Pinyin,
+                    PinyinNoNumbers = Pinyin.RemoveNumbersAndUnderscore(entry.Pinyin),
+                    Length = entry.Traditional.Length,
+                    TableName = "CedictEntry",
+                    TableId = entry.Id
+                };
+                indices.Add(index);
+            }
+            db.InsertAllAsync(indices);
+        }
+
         public override void Build()
         {
             db.DropTableAsync<CedictEntry>();
@@ -60,10 +86,12 @@ namespace XianDict
             //try
             {
                 //var entries = await db.Table<CedictEntry>().Where(p => p.Traditional.StartsWith(query)).ToListAsync();
-                var entries = await db.QueryAsync<CedictEntry>(ct, "SELECT * FROM CedictEntry e WHERE e.Traditional LIKE ? ESCAPE '\\'", query + "%");
+                var entries = await db.QueryAsync<CedictEntry>(ct, "SELECT * FROM CedictEntry WHERE Traditional LIKE ? ESCAPE '\\'", query + "%");
                 foreach (var q in Pinyin.ToQueryForms(query))
                 {
-                    var newEntries = await db.QueryAsync<CedictEntry>(ct, "SELECT * FROM CedictEntry e WHERE e.Pinyin LIKE ? ESCAPE '\\'", q + "%");
+                    var newEntries = await db.QueryAsync<CedictEntry>(ct,
+                        "SELECT * FROM (SELECT * FROM CedictEntry WHERE PinyinNoNumbers LIKE ? ESCAPE '\\') " 
+                        + "WHERE Pinyin LIKE ? ESCAPE '\\'", Pinyin.RemoveNumbersAndUnderscore(q) + "%", q + "%");
                     entries.AddRange(newEntries);
 
                 }
