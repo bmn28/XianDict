@@ -49,7 +49,7 @@ namespace XianDict
                     selectedEntry = value;
                     if (selectedEntry != null)
                     {
-                        //DisplayEntry(selectedEntry);
+                        fdViewer.Document = DictionaryRenderer.Render(selectedEntry, engine, Resources);
                     }
                 }
             }

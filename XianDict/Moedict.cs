@@ -170,6 +170,11 @@ namespace XianDict
             }
             return results;
         }
+
+        public async Task<MoedictHeteronym> LookupHeteronym(int id)
+        {
+            return await db.GetWithChildrenAsync<MoedictHeteronym>(id);
+        }
     }
     public class MoedictEntry
     {

@@ -85,6 +85,8 @@ namespace XianDict
             db.InsertAllAsync(definitions).Wait();
         }
 
+
+
         public override async Task<IEnumerable<SearchResult>> Search(CancellationToken ct, string query)
         {
             var results = new List<SearchResult>();

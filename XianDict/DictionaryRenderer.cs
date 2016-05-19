@@ -15,9 +15,69 @@ namespace XianDict
 
         private static Regex rx = new Regex(@"`([^`~]+)~");
 
-        public static async Task<FlowDocument> Render(SearchResult entry, ResourceDictionary rd)
+        public static FlowDocument Render(IndexedTerm entry, DictionaryEngine engine, ResourceDictionary rd)
         {
             FlowDocument doc = new FlowDocument();
+
+            switch (entry.TableName)
+            {
+                case "MoedictHeteronym":
+                    var heteronym = ((Moedict)engine["moedict"]).LookupHeteronym(entry.TableId).Result;
+                    Paragraph headword = ParseLinks(entry.Traditional);
+                    headword.Style = (Style)rd["HeadwordStyle"];
+                    doc.Blocks.Add(headword);
+                    Paragraph pinyin = new Paragraph(new Run(heteronym.Pinyin));
+                    pinyin.Style = (Style)rd["PinyinStyle"];
+                    doc.Blocks.Add(pinyin);
+
+                    Paragraph type;
+                    string currentType = heteronym.Definitions[0].Type;
+                    if (currentType != null)
+                    {
+                        type = ParseLinks(currentType, "TypeStyle");
+                        doc.Blocks.Add(type);
+                    }
+
+                    List list = new List();
+                    list.MarkerStyle = TextMarkerStyle.Decimal;
+
+                    foreach (MoedictDefinition d in heteronym.Definitions)
+                    {
+                        string newType = d.Type;
+                        if (currentType != null && !currentType.Equals(newType))
+                        {
+                            doc.Blocks.Add(list);
+                            list = new List();
+                            currentType = newType;
+                            type = ParseLinks(currentType, "TypeStyle");
+                            doc.Blocks.Add(type);
+                        }
+
+                        ListItem listItem = new ListItem(ParseLinks(d.Definition));
+                        if (d.Examples != null)
+                        {
+                            foreach (string e in d.Examples)
+                            {
+                                listItem.Blocks.Add(ParseLinks(e, "ExampleStyle"));
+                            }
+                        }
+                        if (d.Quotes != null)
+                        {
+                            foreach (string q in d.Quotes)
+                            {
+                                listItem.Blocks.Add(ParseLinks(q, "QuoteStyle"));
+                            }
+                        }
+
+                        list.ListItems.Add(listItem);
+                    }
+                    doc.Blocks.Add(list);
+                    list.MarkerStyle = list.ListItems.Count > 1 ? TextMarkerStyle.Decimal : TextMarkerStyle.None;
+                    break;
+                default:
+                    break;
+            }
+
             //doc.FontSize = 24;
 
             //foreach (Moedict.Heteronym h in entry.Heteronyms)

@@ -24,6 +24,11 @@ namespace XianDict
         private SQLiteAsyncConnection db;
         private ICollection<Dict> dictionaries;
 
+        public Dict this [string key]
+        {
+            get { return dictionaries.Where(d => d.ShortTitle.Equals(key)).First(); }
+        }
+
         public DictionaryEngine()
         {
             db = new SQLiteAsyncConnection(() => new SQLiteConnectionWithLock(
