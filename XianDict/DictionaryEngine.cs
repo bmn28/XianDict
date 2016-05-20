@@ -64,8 +64,8 @@ namespace XianDict
 
         public async Task<IEnumerable<Term>> Search(CancellationToken ct, string query)
         {
-            var results = new List<IndexedTermWithFreq>();
-            results.AddRange(await db.QueryAsync<IndexedTermWithFreq>(ct, "SELECT * FROM Term LEFT JOIN Frequency ON Traditional = Hanzi WHERE Traditional LIKE ? OR Simplified LIKE ? ESCAPE '\\'", query + "%", query + "%"));
+            var results = new List<TermWithFreq>();
+            results.AddRange(await db.QueryAsync<TermWithFreq>(ct, "SELECT * FROM Term LEFT JOIN Frequency ON Simplified = Hanzi OR Traditional = Hanzi WHERE Traditional LIKE ? OR Simplified LIKE ? ESCAPE '\\'", query + "%", query + "%"));
             var queryForms = Pinyin.ToQueryForms(query);
             int numberOfForms = queryForms.Count();
             bool allowMultiCharacter = numberOfForms > 1 || (numberOfForms > 0 && queryForms.First().IndexOf(' ') != -1);
@@ -75,7 +75,7 @@ namespace XianDict
                 if (!string.IsNullOrWhiteSpace(q))
                 {
 
-                    results.AddRange(await db.QueryAsync<IndexedTermWithFreq>(ct,
+                    results.AddRange(await db.QueryAsync<TermWithFreq>(ct,
                         "SELECT * FROM (SELECT * FROM (SELECT * FROM Term WHERE " + limitLength + "PinyinNoNumbers LIKE ? ESCAPE '\\') "
                         + " WHERE PinyinNumbered LIKE ?) LEFT JOIN Frequency ON Simplified = Hanzi OR Traditional = Hanzi", Pinyin.RemoveNumbersAndUnderscore(q) + "%", q + "%"));
 
@@ -84,53 +84,10 @@ namespace XianDict
             return results.OrderBy(r => r.Length).ThenBy(r => r.PinyinNumbered.Length).ThenByDescending(r => r.Score, freqComparer).ThenBy(r => r.PinyinNumbered);
         }
 
-    //    public async Task<IEnumerable<SearchResult>> Search(CancellationToken ct, string query)
-    //    {
-    //        var map = new Dictionary<string, Dictionary<string, SearchResult>>();
-    //        var results = new List<SearchResult>();
-    //        var resultsBegin = new List<SearchResult>();
-    //        //var resultsMiddle = new List<SearchResult>();
-
-    //        foreach (var d in dictionaries)
-    //        {
-    //            foreach (var r in await d.Search(ct, query))
-    //            {
-    //                Dictionary<string, SearchResult> entry;
-    //                if (map.TryGetValue(r.Traditional, out entry))
-    //                {
-    //                    SearchResult existingResult;
-    //                    if (map[r.Traditional].TryGetValue(r.PinyinNumbered, out existingResult))
-    //                    {
-    //                        existingResult.Definitions.AddRange(r.Definitions);
-    //                    }
-    //                }
-    //                else
-    //                {
-    //                    var newDict = new Dictionary<string, SearchResult>();
-    //                    map[r.Traditional] = newDict;
-    //                    newDict[r.PinyinNumbered] = r;
-    //                }
-    //            }
-    //        }
-    //        foreach (var e in map)
-    //        {
-    //            foreach (var h in e.Value)
-    //            {
-    //                //if (h.Value.Traditional.Equals(query))
-    //                    results.Add(h.Value);
-    //                //else if (h.Value.Traditional.StartsWith(query))
-    //                //    resultsBegin.Add(h.Value);
-    //                //else
-    //                    //resultsMiddle.Add(h.Value);
-    //            }
-    //        }
-    //        results.Sort();
-    //        resultsBegin.Sort();
-    //        //resultsMiddle.Sort();
-    //        results.AddRange(resultsBegin);
-    //        //results.AddRange(resultsMiddle);
-    //        return results;
-    //    }
+        public async Task<IEnumerable<Term>> SearchExact(CancellationToken ct, string query)
+        {
+            return (await db.QueryAsync<TermWithFreq>(ct, "SELECT * FROM Term LEFT JOIN Frequency ON Simplified = Hanzi OR Traditional = Hanzi WHERE Traditional = ? OR Simplified = ?", query, query)).OrderBy(r => r.Id);
+        }
 
         private void ReadFrequencies()
         {
@@ -189,7 +146,7 @@ namespace XianDict
         [OneToOne(CascadeOperations = CascadeOperation.CascadeRead)]
         public MoedictHeteronym MoedictHeteronym { get; set; }
     }
-    public class IndexedTermWithFreq : Term
+    public class TermWithFreq : Term
     {
         public float? Score { get; set; }
     }

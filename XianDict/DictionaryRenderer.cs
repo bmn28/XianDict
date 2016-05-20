@@ -196,7 +196,7 @@ namespace XianDict
 
          
 
-        public static Paragraph ParseLinks(string text, string style = null, bool noLinks = false)
+        public static Paragraph ParseLinks(string text, string style = null, bool noLinks = true)
         {
             Paragraph p = new Paragraph();
 

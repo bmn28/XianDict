@@ -32,7 +32,7 @@ namespace XianDict
         }
 
         private DictionaryEngine engine;
-        private string query;
+        private CancellationTokenSource cts = new CancellationTokenSource();
         private SearchMode searchMode;
         public ObservableCollection<Term> results { get; set; }
         private Term selectedEntry;
@@ -54,14 +54,7 @@ namespace XianDict
                 }
             }
         }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected void OnPropertyChanged(string propertyName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
+        private string query;
         public string Query
         {
             get
@@ -78,8 +71,9 @@ namespace XianDict
                 OnPropertyChanged("Query");
             }
         }
-
-        private CancellationTokenSource cts = new CancellationTokenSource();
+        private int popupIndex;
+        private int popupNumberOfEntries;
+        private IEnumerable<Term> popupResults;
 
         public MainWindow()
         {
@@ -88,6 +82,9 @@ namespace XianDict
             results = new ObservableCollection<Term>();
             DictionaryRenderer.rd = Resources;
             this.DataContext = this;
+
+            fdViewer.AddHandler(MouseUpEvent, new MouseButtonEventHandler(fdViewer_MouseUp), true);
+            //fdViewer.Selection.Changed += fdViewer_MouseUp;
         }
 
         private async void Search(string query)
@@ -124,6 +121,14 @@ namespace XianDict
             Debug.WriteLine("Query = " + Query);
         }
 
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+
         protected override void OnClosed(EventArgs e)
         {
             Properties.Settings.Default.LastQuery = Query;
@@ -142,6 +147,64 @@ namespace XianDict
                 Query = Properties.Settings.Default.LastQuery;
             }
             base.OnInitialized(e);
+        }
+
+        private async void fdViewer_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (fdViewer.Selection != null)
+            {
+                var selectionStart = fdViewer.Selection.Start;
+                var selectionEnd = fdViewer.Selection.End;
+                var selection = new TextRange(selectionStart, selectionEnd).Text;
+
+                if (selection.Length > 0)
+                {
+                    CancellationTokenSource cts = new CancellationTokenSource();
+                    var tabIndex = selection.IndexOf('\t');
+                    if (tabIndex != -1)
+                    {
+                        selection = selection.Substring(tabIndex + 1);
+                    }
+                    popupResults = await engine.SearchExact(cts.Token, selection);
+                    popupNumberOfEntries = popupResults.Count();
+                    if (popupNumberOfEntries > 0) {
+                        popupIndex = 0;
+                        popupNext.Visibility = popupPrev.Visibility = (Visibility)(new BooleanToVisibilityConverter().Convert(popupNumberOfEntries > 1, null, null, null));
+                        popupPrev.IsEnabled = false;
+                        popupViewer.Document = DictionaryRenderer.Render(popupResults.First(), engine);
+                        popup.IsOpen = true;
+                    }
+                }
+                //var pos = e.GetPosition(fdViewer);
+            }
+        }
+
+        private void popupPrev_Click(object sender, RoutedEventArgs e)
+        {
+            if (popupIndex > 0)
+            {
+                popupIndex--;
+                popupViewer.Document = DictionaryRenderer.Render(popupResults.ElementAt(popupIndex), engine);
+                if (popupIndex == 0)
+                {
+                    popupPrev.IsEnabled = false;
+                }
+                popupNext.IsEnabled = true;
+            }
+        }
+
+        private void popupNext_Click(object sender, RoutedEventArgs e)
+        {
+            if (popupIndex + 1 < popupNumberOfEntries)
+            {
+                popupIndex++;
+                popupViewer.Document = DictionaryRenderer.Render(popupResults.ElementAt(popupIndex), engine);
+                if (popupIndex + 1 == popupNumberOfEntries)
+                {
+                    popupNext.IsEnabled = false;
+                }
+                popupPrev.IsEnabled = true;
+            }
         }
     }
 
