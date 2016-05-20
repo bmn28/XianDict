@@ -55,6 +55,7 @@
     <Compile Include="PinyinTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TradToSimpTest.cs" />
+    <Compile Include="StrokeWordTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\XianDict\XianDict.csproj">

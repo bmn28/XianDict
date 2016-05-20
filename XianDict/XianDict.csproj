@@ -88,6 +88,7 @@
     <Compile Include="Dict.cs" />
     <Compile Include="DictionaryRenderer.cs" />
     <Compile Include="Frequency.cs" />
+    <Compile Include="StrokeWord.cs" />
     <Compile Include="TradToSimp.cs" />
     <Compile Include="Moedict.cs" />
     <Compile Include="Pinyin.cs" />
