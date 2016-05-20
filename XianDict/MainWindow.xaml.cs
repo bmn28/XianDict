@@ -49,7 +49,7 @@ namespace XianDict
                     selectedEntry = value;
                     if (selectedEntry != null)
                     {
-                        fdViewer.Document = DictionaryRenderer.Render(selectedEntry, engine, Resources);
+                        fdViewer.Document = DictionaryRenderer.Render(selectedEntry, engine);
                     }
                 }
             }
@@ -86,6 +86,7 @@ namespace XianDict
             InitializeComponent();
             engine = new DictionaryEngine();
             results = new ObservableCollection<Term>();
+            DictionaryRenderer.rd = Resources;
             this.DataContext = this;
         }
 

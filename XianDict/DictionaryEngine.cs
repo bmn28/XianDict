@@ -186,7 +186,7 @@ namespace XianDict
         public CedictEntry CedictEntry { get; set; }
         [ForeignKey(typeof(MoedictHeteronym))]
         public int MoedictHeteronymId { get; set; }
-        [OneToOne]
+        [OneToOne(CascadeOperations = CascadeOperation.CascadeRead)]
         public MoedictHeteronym MoedictHeteronym { get; set; }
     }
     public class IndexedTermWithFreq : Term

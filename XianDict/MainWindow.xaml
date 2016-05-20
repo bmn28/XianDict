@@ -6,6 +6,61 @@
         xmlns:local="clr-namespace:XianDict"
         mc:Ignorable="d"
         Title="MainWindow" Height="768" Width="1024">
+    <Window.Resources>
+        <Style x:Key="ParagraphStyle" TargetType="Paragraph" />
+        <Style x:Key="HeadwordStyle" TargetType="Paragraph">
+            <Setter Property="FontSize" Value="36" />
+            <Setter Property="FontFamily" Value="Microsoft JhengHei" />
+            <Setter Property="Margin" Value="0" />
+        </Style>
+        <Style x:Key="TypeStyle" TargetType="Paragraph">
+            <Setter Property="FontFamily" Value="Microsoft JhengHei" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Margin" Value="0" />
+            <!--<Setter Property="Background" Value="Maroon" />
+            <Setter Property="Foreground" Value="White" />-->
+        </Style>
+        <Style x:Key="HeadingStyle" TargetType="Paragraph">
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="Foreground" Value="DodgerBlue" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="FontFamily" Value="Segoe UI" />
+        </Style>
+        <Style x:Key="PinyinStyle" TargetType="Paragraph">
+            <Setter Property="Margin" Value="0" />
+            <Setter Property="FontFamily" Value="Microsoft JhengHei" />
+        </Style>
+        <Style x:Key="QuoteStyle" TargetType="Paragraph">
+            <Setter Property="FontFamily" Value="Microsoft JhengHei" />
+        </Style>
+        <Style x:Key="ExampleStyle" TargetType="Paragraph">
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="FontFamily" Value="Microsoft JhengHei" />
+        </Style>
+        <Style x:Key="EnglishParagraph" TargetType="Paragraph">
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontFamily" Value="Segoe UI" />
+        </Style>
+        <Style TargetType="List">
+            <Setter Property="FontFamily" Value="Segoe UI" />
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontWeight" Value="Bold" />
+            <Setter Property="Padding" Value="25,0,0,0" />
+            <Setter Property="Margin" Value="0" />
+        </Style>
+        <Style TargetType="ListItem">
+            <Setter Property="FontFamily" Value="Microsoft JhengHei" />
+            <Setter Property="FontWeight" Value="Regular" />
+            <Setter Property="Margin" Value="0" />
+        </Style>
+        <Style TargetType="Hyperlink">
+            <Setter Property="Foreground" Value="Black" />
+            <Setter Property="TextDecorations" Value="" />
+        </Style>
+        <Style TargetType="Paragraph">
+            <Setter Property="FontSize" Value="20" />
+        </Style>
+    </Window.Resources>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="1*" />
@@ -192,9 +247,9 @@
                                         <TextBlock Text="{Binding}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" />
                                     </DataTemplate>
                             </ItemsControl.ItemTemplate>
-                        </ItemsControl>-->   
+                        </ItemsControl>-->
                         </WrapPanel>
-                 
+
                     </StackPanel>
 
 

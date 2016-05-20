@@ -121,6 +121,10 @@ namespace XianDict
 
             return results;
         }
+        public async Task<CedictEntry> LookupEntry(int id)
+        {
+            return await db.GetWithChildrenAsync<CedictEntry>(id, recursive: true).ConfigureAwait(false);
+        }
     }
 
     public class CedictEntry

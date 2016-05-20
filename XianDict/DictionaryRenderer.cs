@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Documents;
 
 namespace XianDict
@@ -15,67 +16,123 @@ namespace XianDict
 
         private static Regex rx = new Regex(@"`([^`~]+)~");
 
-        public static FlowDocument Render(IndexedTerm entry, DictionaryEngine engine, ResourceDictionary rd)
+        public static FlowDocument Render(Term term, DictionaryEngine engine)
         {
             FlowDocument doc = new FlowDocument();
+            
+            Paragraph headword = ParseLinks(term.Traditional);
+            headword.Style = (Style)rd["HeadwordStyle"];
+            doc.Blocks.Add(headword);
+            Paragraph pinyin = new Paragraph(new Run(term.Pinyin));
+            pinyin.Style = (Style)rd["PinyinStyle"];
+            doc.Blocks.Add(pinyin);
 
-            switch (entry.TableName)
+
+            if (term.CedictEntryId != 0)
             {
-                case "MoedictHeteronym":
-                    var heteronym = ((Moedict)engine["moedict"]).LookupHeteronym(entry.TableId).Result;
-                    Paragraph headword = ParseLinks(entry.Traditional);
-                    headword.Style = (Style)rd["HeadwordStyle"];
-                    doc.Blocks.Add(headword);
-                    Paragraph pinyin = new Paragraph(new Run(heteronym.Pinyin));
-                    pinyin.Style = (Style)rd["PinyinStyle"];
-                    doc.Blocks.Add(pinyin);
+                doc.Blocks.Add(new BlockUIContainer(new Separator() { Margin = new Thickness(-3, 3, -3, 3) }));
 
-                    Paragraph type;
-                    string currentType = heteronym.Definitions[0].Type;
-                    if (currentType != null)
-                    {
-                        type = ParseLinks(currentType, "TypeStyle");
-                        doc.Blocks.Add(type);
-                    }
+                var entry = ((Cedict)engine["cedict"]).LookupEntry(term.CedictEntryId).Result;
+                Paragraph heading = new Paragraph(new Run("CC"));
+                heading.Style = (Style)rd["HeadingStyle"];
+                doc.Blocks.Add(heading);
 
-                    List list = new List();
+                List list = new List();
+                list.MarkerStyle = TextMarkerStyle.Decimal;
+
+                foreach (CedictDefinition d in entry.Definitions)
+                {
+                    ListItem listItem = new ListItem(new Paragraph(new Run(d.Definition)) { Style = (Style)rd["EnglishParagraph"] });
+                    list.ListItems.Add(listItem);
+                }
+                doc.Blocks.Add(list);
+                if (list.ListItems.Count == 1)
+                {
+                    list.MarkerStyle = TextMarkerStyle.None;
+                    list.Padding = new Thickness(0, 0, 0, 0);
+                }
+                else
+                {
                     list.MarkerStyle = TextMarkerStyle.Decimal;
+                }
+            }
 
-                    foreach (MoedictDefinition d in heteronym.Definitions)
+
+            if (term.MoedictHeteronymId != 0)
+            {
+                doc.Blocks.Add(new BlockUIContainer(new Separator() { Margin = new Thickness(-3, 3, -3, 3) }));
+
+                var heteronym = ((Moedict)engine["moedict"]).LookupHeteronym(term.MoedictHeteronymId).Result;
+                Paragraph heading = new Paragraph(new Run("MOE"));
+                heading.Style = (Style)rd["HeadingStyle"];
+                doc.Blocks.Add(heading);
+                Paragraph type;
+                string currentType = heteronym.Definitions[0].Type;
+                if (currentType != null)
+                {
+                    type = ParseLinks(currentType, "TypeStyle", true);
+                    var uic = new BlockUIContainer() {  };
+                    uic.Child = new Border() { BorderThickness = new Thickness(1), BorderBrush = System.Windows.Media.Brushes.Gray,Padding = new Thickness(2,2,2,0), CornerRadius = new CornerRadius(2), HorizontalAlignment = HorizontalAlignment.Left };
+                    ((Border)uic.Child).Child = new TextBlock(type.Inlines.FirstInline) { HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0), Foreground = System.Windows.Media.Brushes.Gray };
+                    doc.Blocks.Add(uic);
+                }
+
+                List list = new List();
+                list.MarkerStyle = TextMarkerStyle.Decimal;
+
+                foreach (MoedictDefinition d in heteronym.Definitions)
+                {
+                    string newType = d.Type;
+                    if (currentType != null && !currentType.Equals(newType))
                     {
-                        string newType = d.Type;
-                        if (currentType != null && !currentType.Equals(newType))
+                        if (list.ListItems.Count == 1)
                         {
-                            doc.Blocks.Add(list);
-                            list = new List();
-                            currentType = newType;
-                            type = ParseLinks(currentType, "TypeStyle");
-                            doc.Blocks.Add(type);
+                            list.MarkerStyle = TextMarkerStyle.None;
+                            list.Padding = new Thickness(0, 0, 0, 0);
                         }
-
-                        ListItem listItem = new ListItem(ParseLinks(d.Definition));
-                        if (d.Examples != null)
+                        else
                         {
-                            foreach (string e in d.Examples)
-                            {
-                                listItem.Blocks.Add(ParseLinks(e, "ExampleStyle"));
-                            }
+                            list.MarkerStyle = TextMarkerStyle.Decimal;
                         }
-                        if (d.Quotes != null)
-                        {
-                            foreach (string q in d.Quotes)
-                            {
-                                listItem.Blocks.Add(ParseLinks(q, "QuoteStyle"));
-                            }
-                        }
-
-                        list.ListItems.Add(listItem);
+                        doc.Blocks.Add(list);
+                        doc.Blocks.Add(new BlockUIContainer(new Separator() { Margin = new Thickness(10, 6, 10, 6) }));
+                        list = new List();
+                        currentType = newType;
+                        type = ParseLinks(currentType, "TypeStyle", true);
+                        var uic = new BlockUIContainer() { };
+                        uic.Child = new Border() { BorderThickness = new Thickness(1), BorderBrush = System.Windows.Media.Brushes.Gray, Padding = new Thickness(2, 2, 2, 0), CornerRadius = new CornerRadius(2), HorizontalAlignment = HorizontalAlignment.Left };
+                        ((Border)uic.Child).Child = new TextBlock(type.Inlines.FirstInline) { HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0), Foreground = System.Windows.Media.Brushes.Gray };
+                        doc.Blocks.Add(uic);
                     }
-                    doc.Blocks.Add(list);
-                    list.MarkerStyle = list.ListItems.Count > 1 ? TextMarkerStyle.Decimal : TextMarkerStyle.None;
-                    break;
-                default:
-                    break;
+
+                    ListItem listItem = new ListItem(ParseLinks(d.Definition));
+                    if (d.Examples != null)
+                    {
+                        foreach (var e in d.Examples)
+                        {
+                            listItem.Blocks.Add(ParseLinks(e.Example, "ExampleStyle"));
+                        }
+                    }
+                    if (d.Quotes != null)
+                    {
+                        foreach (var q in d.Quotes)
+                        {
+                            listItem.Blocks.Add(ParseLinks(q.Quote, "QuoteStyle"));
+                        }
+                    }
+                    list.ListItems.Add(listItem);
+                }
+                doc.Blocks.Add(list);
+                if (list.ListItems.Count == 1)
+                {
+                    list.MarkerStyle = TextMarkerStyle.None;
+                    list.Padding = new Thickness(0, 0, 0, 0);
+                }
+                else
+                {
+                    list.MarkerStyle = TextMarkerStyle.Decimal;
+                }
+                //list.MarkerStyle = list.ListItems.Count > 1 ? TextMarkerStyle.Decimal : TextMarkerStyle.None;
             }
 
             //doc.FontSize = 24;
@@ -139,7 +196,7 @@ namespace XianDict
 
          
 
-        public static Paragraph ParseLinks(string text, string style = null)
+        public static Paragraph ParseLinks(string text, string style = null, bool noLinks = false)
         {
             Paragraph p = new Paragraph();
 
@@ -160,9 +217,16 @@ namespace XianDict
                         p.Inlines.Add(new Run(text.Substring(i, match.Index - i)));
                     }
                     // make a hyperlink
-                    Hyperlink h = new Hyperlink(new Run(match.Groups[1].Value));
-                    //h.Click += followHyperlink;
-                    p.Inlines.Add(h);
+                    if (noLinks)
+                    {
+                        p.Inlines.Add(new Run(match.Groups[1].Value));
+                    }
+                    else
+                    {
+                        Hyperlink h = new Hyperlink(new Run(match.Groups[1].Value));
+                        //h.Click += followHyperlink;
+                        p.Inlines.Add(h);
+                    }
                     i = match.Index + match.Length;
                     match = match.NextMatch();
                 }

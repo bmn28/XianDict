@@ -97,22 +97,28 @@ namespace XianDict
             {
                 if (d.Quotes != null)
                 {
-                    foreach (var quote in d.Quotes)
+                    foreach (var quote in d.QuoteStrings)
                     {
+                        //quote.DefinitionId = d.Id;
+                        //quotes.Add(quote);
                         quotes.Add(new MoedictQuote() { DefinitionId = d.Id, Quote = quote });
                     }
                 }
                 if (d.Examples != null)
                 {
-                    foreach (var example in d.Examples)
+                    foreach (var example in d.ExampleStrings)
                     {
+                        //example.DefinitionId = d.Id;
+                        //examples.Add(example);
                         examples.Add(new MoedictExample() { DefinitionId = d.Id, Example = example });
                     }
                 }
                 if (d.Links != null)
                 {
-                    foreach (var link in d.Links)
+                    foreach (var link in d.LinkStrings)
                     {
+                        //link.DefinitionId = d.Id;
+                        //links.Add(link);
                         links.Add(new MoedictLink() { DefinitionId = d.Id, Link = link });
                     }
                 }
@@ -143,10 +149,11 @@ namespace XianDict
                         Simplified = "",
                         Pinyin = entry.Pinyin,
                         PinyinNumbered = entry.PinyinNumbered,
-                        PinyinNoNumbers = Pinyin.RemoveNumbersAndUnderscore(entry.Pinyin),
+                        PinyinNoNumbers = Pinyin.RemoveNumbersAndUnderscore(entry.PinyinNumbered),
                         Length = entry.Traditional.Length,
+                        MoedictHeteronymId = entry.Id,
                     };
-                    index[key] = term;
+                index[key] = term;
                 }
             }
         }
@@ -173,7 +180,7 @@ namespace XianDict
 
         public async Task<MoedictHeteronym> LookupHeteronym(int id)
         {
-            return await db.GetWithChildrenAsync<MoedictHeteronym>(id);
+            return await db.GetWithChildrenAsync<MoedictHeteronym>(id, recursive:true).ConfigureAwait(false);
         }
     }
     public class MoedictEntry
@@ -242,12 +249,21 @@ namespace XianDict
         [JsonProperty("f")]
         public string Definition { get; set; }
 
-        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead), JsonProperty("q")]
-        public List<string> Quotes { get; set; }
-        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead), JsonProperty("l")]
-        public List<string> Links { get; set; }
-        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead), JsonProperty("e")]
-        public List<string> Examples { get; set; }
+        [Ignore, JsonProperty("q")]
+        public List<string> QuoteStrings { get; set; }
+
+        [Ignore, JsonProperty("l")]
+        public List<string> LinkStrings { get; set; }
+
+        [Ignore, JsonProperty("e")]
+        public List<string> ExampleStrings { get; set; }
+
+        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead)]
+        public List<MoedictQuote> Quotes { get; set; }
+        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead)]
+        public List<MoedictLink> Links { get; set; }
+        [OneToMany(CascadeOperations = CascadeOperation.CascadeRead)]
+        public List<MoedictExample> Examples { get; set; }
     }
 
     public class MoedictQuote
