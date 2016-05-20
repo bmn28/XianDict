@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using XianDict;
 using System.IO;
 using System.Collections.Generic;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace XianDictTests
 {
@@ -22,6 +23,13 @@ namespace XianDictTests
                     words.Add(word);
                 }
             }
+        }
+
+        [TestMethod]
+        public void Window_Test()
+        {
+            StrokeDisplay d = new StrokeDisplay();
+            d.ShowDialog();
         }
     }
 }
