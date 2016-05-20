@@ -65,7 +65,7 @@ namespace XianDict
         public async Task<IEnumerable<Term>> Search(CancellationToken ct, string query)
         {
             var results = new List<IndexedTermWithFreq>();
-            results.AddRange(await db.QueryAsync<IndexedTermWithFreq>(ct, "SELECT * FROM Term LEFT JOIN Frequency ON Traditional = Hanzi WHERE Traditional LIKE ? ESCAPE '\\'", query + "%"));
+            results.AddRange(await db.QueryAsync<IndexedTermWithFreq>(ct, "SELECT * FROM Term LEFT JOIN Frequency ON Traditional = Hanzi WHERE Traditional LIKE ? OR Simplified LIKE ? ESCAPE '\\'", query + "%", query + "%"));
             var queryForms = Pinyin.ToQueryForms(query);
             int numberOfForms = queryForms.Count();
             bool allowMultiCharacter = numberOfForms > 1 || (numberOfForms > 0 && queryForms.First().IndexOf(' ') != -1);

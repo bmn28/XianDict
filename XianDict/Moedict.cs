@@ -146,7 +146,7 @@ namespace XianDict
                     term = new Term()
                     {
                         Traditional = entry.Traditional,
-                        Simplified = "",
+                        Simplified = TradToSimp.Convert(entry.Traditional).FirstOrDefault(),
                         Pinyin = entry.Pinyin,
                         PinyinNumbered = entry.PinyinNumbered,
                         PinyinNoNumbers = Pinyin.RemoveNumbersAndUnderscore(entry.PinyinNumbered),

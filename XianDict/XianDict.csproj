@@ -83,10 +83,12 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="CartesianIterator.cs" />
     <Compile Include="Cedict.cs" />
     <Compile Include="Dict.cs" />
     <Compile Include="DictionaryRenderer.cs" />
     <Compile Include="Frequency.cs" />
+    <Compile Include="TradToSimp.cs" />
     <Compile Include="Moedict.cs" />
     <Compile Include="Pinyin.cs" />
     <Compile Include="SearchResult.cs" />
@@ -139,6 +141,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Unihan_Variants.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="a.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
