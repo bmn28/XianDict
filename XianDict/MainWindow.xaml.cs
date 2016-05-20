@@ -18,6 +18,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.IO.IsolatedStorage;
+using System.Windows.Controls.Primitives;
 
 namespace XianDict
 {
@@ -205,6 +206,51 @@ namespace XianDict
                 }
                 popupPrev.IsEnabled = true;
             }
+        }
+
+        private void Thumb_DragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e)
+        {
+            Thumb t = (Thumb)sender;
+
+            t.Cursor = Cursors.SizeNWSE;
+        }
+
+        private void Thumb_DragDelta(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)
+        {
+            double yadjust = popupViewer.Height + e.VerticalChange;
+
+            double xadjust = popupViewer.Width + e.HorizontalChange;
+
+            if ((xadjust >= 0) && (yadjust >= 0))
+
+            {
+
+                popupViewer.Width = xadjust;
+
+                popupViewer.Height = yadjust;
+
+            }
+        }
+
+        private void Thumb_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+        {
+            Thumb t = (Thumb)sender;
+
+            t.Cursor = null;
+        }
+
+        private void Thumb_MouseEnter(object sender, MouseEventArgs e)
+        {
+            Thumb t = (Thumb)sender;
+
+            t.Cursor = Cursors.SizeNWSE;
+        }
+
+        private void Thumb_MouseLeave(object sender, MouseEventArgs e)
+        {
+            Thumb t = (Thumb)sender;
+
+            t.Cursor = null;
         }
     }
 

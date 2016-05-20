@@ -303,9 +303,10 @@
         <Popup Name="popup" StaysOpen="False" Placement="Mouse">
             <Border BorderBrush="Blue" BorderThickness="1" Background="White">
                 <Grid>
-                    <FlowDocumentScrollViewer Name="popupViewer" Width="400" MinHeight="100" MaxHeight="500"/>
-                    <Button Name="popupPrev" Content="&lt;" Height="32" VerticalAlignment="Top" HorizontalAlignment="Right" Width="32" Margin="0,10,65,0" Click="popupPrev_Click"/>
-                    <Button Name="popupNext" Content="&gt;" Height="32" VerticalAlignment="Top" HorizontalAlignment="Right" Width="32" Margin="0,10,26,0" Click="popupNext_Click"/>
+                    <FlowDocumentScrollViewer Name="popupViewer" Width="400" Height="150" MinWidth="200" MinHeight="100"/>
+                    <Button Name="popupPrev" Content="&lt;" VerticalAlignment="Top" HorizontalAlignment="Right" Height="32" Width="32" Margin="0,10,65,0" Click="popupPrev_Click"/>
+                    <Button Name="popupNext" Content="&gt;" VerticalAlignment="Top" HorizontalAlignment="Right" Height="32" Width="32" Margin="0,10,26,0" Click="popupNext_Click"/>
+                    <Thumb HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,16,0" Width="16" Height="16" DragStarted="Thumb_DragStarted" DragDelta="Thumb_DragDelta" DragCompleted="Thumb_DragCompleted" Opacity="0" MouseEnter="Thumb_MouseEnter" MouseLeave="Thumb_MouseLeave" />
                 </Grid>
             </Border>
         </Popup>
