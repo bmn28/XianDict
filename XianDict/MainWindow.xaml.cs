@@ -174,10 +174,29 @@ namespace XianDict
                         popupPrev.IsEnabled = false;
                         popupViewer.Document = DictionaryRenderer.Render(popupResults.First(), engine);
                         popup.IsOpen = true;
+
+                        ScrollPopupToTop();
                     }
                 }
                 //var pos = e.GetPosition(fdViewer);
             }
+        }
+
+        private void ScrollPopupToTop()
+        {
+            DependencyObject obj = popupViewer;
+
+            do
+            {
+                if (VisualTreeHelper.GetChildrenCount(obj) > 0)
+                    obj = VisualTreeHelper.GetChild(obj as Visual, 0);
+                else
+                    break;
+            }
+            while (!(obj is ScrollViewer));
+
+            var scrollViewer = obj as ScrollViewer;
+            scrollViewer.ScrollToTop();
         }
 
         private void popupPrev_Click(object sender, RoutedEventArgs e)
@@ -186,6 +205,7 @@ namespace XianDict
             {
                 popupIndex--;
                 popupViewer.Document = DictionaryRenderer.Render(popupResults.ElementAt(popupIndex), engine);
+                ScrollPopupToTop();
                 if (popupIndex == 0)
                 {
                     popupPrev.IsEnabled = false;
@@ -200,6 +220,7 @@ namespace XianDict
             {
                 popupIndex++;
                 popupViewer.Document = DictionaryRenderer.Render(popupResults.ElementAt(popupIndex), engine);
+                ScrollPopupToTop();
                 if (popupIndex + 1 == popupNumberOfEntries)
                 {
                     popupNext.IsEnabled = false;
