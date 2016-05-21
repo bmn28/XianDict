@@ -41,6 +41,15 @@ namespace XianDict
                                 if (isTrack)
                                 {
                                     var nextPoint = new Point(float.Parse(reader.GetAttribute("x")), float.Parse(reader.GetAttribute("y")));
+                                    var sizeString = reader.GetAttribute("size");
+                                    if (string.IsNullOrEmpty(sizeString))
+                                    {
+                                        stroke.segmentWidths.Add(300);
+                                    }
+                                    else
+                                    {
+                                        stroke.segmentWidths.Add(2 * float.Parse(sizeString));
+                                    }
                                     track.Add(nextPoint);
                                     if (!startOfTrack)
                                     {
@@ -152,6 +161,27 @@ namespace XianDict
             public PathFigure outline = new PathFigure();
             public List<Point> track = new List<Point>();
             public List<LineGeometry> trackSegments = new List<LineGeometry>();
+            public List<float> segmentWidths = new List<float>();
+
+            private double? length = null;
+            public double Length
+            {
+                get
+                {
+                    if (length == null)
+                    {
+                        length = 0;
+                        foreach (var segment in trackSegments)
+                        {
+                            double dx = segment.StartPoint.X - segment.EndPoint.X;
+                            double dy = segment.StartPoint.Y - segment.EndPoint.Y;
+                            double segmentLength = Math.Sqrt(dx*dx+dy*dy);
+                            length += segmentLength;
+                        }
+                    }
+                    return (double)length;
+                }
+            }
         }
     }
 }
