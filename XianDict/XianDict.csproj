@@ -65,6 +65,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -158,6 +159,11 @@
     <None Include="rawdict_utf16_65105_freq.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <Resource Include="Resources\InkBrush_25x.png" />
+    <Resource Include="Resources\Time_24x.png" />
+    <Resource Include="Resources\BulletList_24x.png" />
+    <Resource Include="Resources\Grid_32x.png" />
+    <Resource Include="Resources\TaskList_32x.png" />
     <Content Include="sqlite3.def">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

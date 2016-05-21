@@ -29,7 +29,7 @@ namespace XianDict
     {
         enum SearchMode
         {
-            Chinese, English
+            中, 英
         }
 
         private DictionaryEngine engine;
