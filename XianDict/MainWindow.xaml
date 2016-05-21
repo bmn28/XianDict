@@ -75,10 +75,11 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
             <TextBox x:Name="searchBox" Grid.Column="0" Height="32" Width="Auto" Margin="0" TextWrapping="Wrap" VerticalAlignment="Top"
-                 Text="{Binding Path=Query, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="searchBox_TextChanged" />
+                 Text="{Binding Path=Query, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" FontSize="20" TextChanged="searchBox_TextChanged" />
             <Button x:Name="button" Content="Chinese" Grid.Column="1" Margin="5,0,0,0" VerticalAlignment="Top" Height="32" Width="75" HorizontalAlignment="Left" Click="button_Click"/>
             <Grid Grid.Row="1" Grid.ColumnSpan="2" Height="32" Margin="0,5,0,0">
                 <Grid.ColumnDefinitions>
@@ -94,7 +95,8 @@
                 <ToggleButton Grid.Column="3" Content="Clipboard"/>
                 <ToggleButton Grid.Column="4" Content="Settings"/>
             </Grid>
-            <ListBox x:Name="resultsBox" Grid.ColumnSpan="2" Grid.Row="2" Height="Auto" HorizontalContentAlignment="Stretch" Margin="0,5,0,0" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+            <Frame Grid.Row="2" Height="100" Margin="0,5,0,0" Visibility="Visible" />
+            <ListBox x:Name="resultsBox" Grid.ColumnSpan="2" Grid.Row="3" Height="Auto" HorizontalContentAlignment="Stretch" Margin="0,5,0,0" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                      ItemsSource="{Binding Path=results}" SelectedItem="{Binding Path=SelectedEntry, Mode=TwoWay}">
                 <ListBox.ItemContainerStyle>
                     <Style TargetType="ListBoxItem" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">

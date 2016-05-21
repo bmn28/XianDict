@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -22,200 +23,188 @@ namespace XianDict
     /// </summary>
     public partial class StrokeDisplay : Window
     {
-        //DrawingGroup strokeGroup;
-        GeometryDrawing background = new GeometryDrawing(Brushes.Transparent, null, new RectangleGeometry(new Rect(new Size(2150, 2150))));
-        GeometryDrawing grid1;
-        GeometryDrawing strokeLines;
-        GeometryDrawing grid2;
+        private static int canvasSize = 2050;
+
+        GeometryDrawing background = new GeometryDrawing(Brushes.Transparent, null, new RectangleGeometry(new Rect(new Size(canvasSize, canvasSize))));
+        GeometryDrawing grid = CreateGrid(canvasSize);
         GeometryDrawing character;
-        GeometryDrawing inverse;
         StrokeWord word;
+        List<StrokeWord> words;
+        List<StrokeWord>.Enumerator enumerator;
         Stopwatch stopwatch;
         int currentStroke;
+        int currentTrack;
         int strokeCount;
-        double progress = 0;
+        double t = 0;
+        bool waiting;
 
-        public StrokeDisplay()
+        private string query;
+        public string Query
         {
-            StrokeWord word;
-            InitializeComponent();
-            using (FileStream fs = File.OpenRead(@"..\..\..\XianDict\bin\Debug\utf8\61ff.xml"))
+            get
             {
-                word = new StrokeWord(fs);
+                return query;
             }
-            //drawingImage.Drawing = word.ToDrawing();
-            SetDrawing(word);
+            set
+            {
+                if (query == null || !query.Equals(value))
+                {
+                    query = value;
 
-            BeginAnimate();
-
-            //var children = ((DrawingGroup)drawingImage.Drawing).Children;
-            //foreach (var stroke in word.Strokes)
-            //{
-            //    foreach (var segment in stroke.trackSegments)
-            //    {
-            //        var d = new GeometryDrawing();
-            //        d.Geometry = segment;
-            //        d.Pen = new Pen(Brushes.Green, 50);
-            //        DoubleAnimation xa = new DoubleAnimation();
-            //        xa.From = segment.StartPoint.X;
-            //        xa.To = segment.EndPoint.X;
-            //        children.Add(d);
-            //        PointAnimation pa = new PointAnimation();
-            //        pa.From = segment.StartPoint;
-            //        pa.To = segment.EndPoint;
-            //        pa.AutoReverse = true;
-            //        segment.BeginAnimation(LineGeometry.EndPointProperty, pa);
-            //    }
-            //}
+                }
+                OnPropertyChanged("Query");
+            }
         }
 
-        public void SetDrawing(StrokeWord word)
+        public StrokeDisplay(char input)
+        {
+            InitializeComponent();
+            this.DataContext = this;
+            //AnimateAll();
+            using (FileStream fs = File.OpenRead(getStrokeFile(input)))
+            {
+                SetWord(new StrokeWord(fs));
+                BeginAnimate();
+            }
+        }
+
+        public void SetWord(StrokeWord word)
         {
             this.word = word;
-            //var group = new DrawingGroup();
-
+            group.Children.Clear();
             group.Children.Add(background);
+            group.Children.Add(grid);
 
-            grid1 = CreateGrid();
-            group.Children.Add(grid1);
-
-            character = new GeometryDrawing(Brushes.Gray, null, new PathGeometry(word.Strokes.Select(x => x.outline)) { FillRule = FillRule.Nonzero });
+            character = new GeometryDrawing(Brushes.Gray, null,
+                new PathGeometry(word.Strokes.Select(x => x.Outline)) { FillRule = FillRule.Nonzero });
             group.Children.Add(character);
-
-            //strokeGroup = new DrawingGroup();
-            //group.Children.Add(strokeGroup);
-
-            inverse = new GeometryDrawing(Brushes.White, null,
-                Geometry.Combine(background.Geometry, character.Geometry, GeometryCombineMode.Xor, null));
-            group.Children.Add(inverse);
-
-            strokeLines = new GeometryDrawing();
-            var strokeGroup = new GeometryGroup();
-            foreach (var stroke in word.Strokes)
-            {
-                foreach (var segment in stroke.trackSegments)
-                {
-                    strokeGroup.Children.Add(segment);
-                }
-            }
-            strokeLines.Pen = new Pen(Brushes.Black, 150);
-            strokeLines.Pen.StartLineCap = strokeLines.Pen.EndLineCap = PenLineCap.Round;
-            strokeLines.Geometry = strokeGroup;
-            group.Children.Add(strokeLines);
-
-            //DoubleAnimation da = new DoubleAnimation();
-            //da.From = 30;
-            //da.To = 100;
-            //da.Duration = new Duration(TimeSpan.FromSeconds(1));
-            //strokeLines.BeginAnimation(GeometryGroup., da);
-
-            //drawingImage.Drawing = group;
         }
-
-        private void Animate(object sender, EventArgs e)
+        public void Redraw()
         {
             group.Children.Clear();
+            group.Children.Add(background);
+            group.Children.Add(grid);
+            character = new GeometryDrawing(Brushes.Gray, null,
+                new PathGeometry(word.Strokes.Select(x => x.Outline)) { FillRule = FillRule.Nonzero });
             group.Children.Add(character);
-
-            //int strokeToDraw = (int)Math.Round((stopwatch.ElapsedMilliseconds / 10000) / (double)strokeCount);
-
-            progress = stopwatch.ElapsedMilliseconds / (double)1000;
-            DrawStroke(currentStroke, progress);
-            if (progress > 1)
-            {
-                stopwatch.Restart();
-                progress = 0;
-                currentStroke++;
-                if (currentStroke == strokeCount)
-                {
-                    CompositionTarget.Rendering -= Animate;
-                }
-            }
-
-            //group.Children.Add(strokeLines);
-            group.Children.Add(inverse);
-            group.Children.Add(grid1);
-
         }
 
         private void BeginAnimate()
         {
             stopwatch = new Stopwatch();
             strokeCount = word.Strokes.Count;
-            progress = 0;
+            t = 0;
             currentStroke = 0;
+            currentTrack = 0;
+            waiting = true;
             stopwatch.Start();
             CompositionTarget.Rendering += Animate;
         }
 
-        private void DrawStroke(int i, double progress)
+        private void Animate(object sender, EventArgs e)
         {
-            //var children = ((GeometryGroup)strokeLines.Geometry).Children;
-            var children = group.Children;
-            //children.Clear();
-
-            List<float>.Enumerator widthEnum;
-            int j;
-            var strokeEnum = word.Strokes.GetEnumerator();
-            StrokeWord.Stroke stroke;
-            for (j = 0; j < i; j++)
+            t = stopwatch.ElapsedMilliseconds / (double)200;
+            if (waiting)
             {
-                strokeEnum.MoveNext();
-                stroke = strokeEnum.Current;
-
-                widthEnum = stroke.segmentWidths.GetEnumerator();
-                foreach (var segment in stroke.trackSegments)
+                if (t > 0.5)
                 {
-                    widthEnum.MoveNext();
-                    children.Add(new GeometryDrawing(null, new Pen(Brushes.Black, widthEnum.Current) {StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round }, segment));
+                    waiting = false;
+                    stopwatch.Restart();
                 }
             }
-            strokeEnum.MoveNext();
-            stroke = strokeEnum.Current;
-            double cumLength = 0;
-            widthEnum = stroke.segmentWidths.GetEnumerator();
-            foreach (var segment in stroke.trackSegments)
+            else
             {
-                widthEnum.MoveNext();
-                double dx = segment.EndPoint.X - segment.StartPoint.X;
-                double dy = segment.EndPoint.Y - segment.StartPoint.Y;
-                double segmentLength = Math.Sqrt(dx * dx + dy * dy);
-                cumLength += segmentLength;
-                if (cumLength / stroke.Length > progress)
+                DrawTrack(currentStroke, currentTrack, t);
+                if (t > 1)
                 {
-                    double segmentProgress = Math.Min(1, (segmentLength - (cumLength - (progress * stroke.Length)))/ segmentLength);
-                    Point interp = new Point(segment.StartPoint.X + dx * segmentProgress, segment.StartPoint.Y + dy * segmentProgress);
-                    //children.Add(new LineGeometry(segment.StartPoint, interp));
-                    children.Add(new GeometryDrawing(null, new Pen(Brushes.Black, widthEnum.Current) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round }, new LineGeometry(segment.StartPoint, interp)));
-                    break;
+                    stopwatch.Restart();
+                    t = 0;
+                    currentTrack++;
+                    if (currentTrack + 1 == word.Strokes[currentStroke].Tracks.Count)
+                    {
+                        currentTrack = 0;
+                        currentStroke++;
+                        waiting = true;
+                        stopwatch.Restart();
+                    }
+                    if (currentStroke == strokeCount)
+                    {
+                        stopwatch.Stop();
+                        CompositionTarget.Rendering -= Animate;
+                        //AnimateNext();
+                    }
                 }
-                children.Add(new GeometryDrawing(null, new Pen(Brushes.Black, widthEnum.Current) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round }, segment));
             }
-
-
-
-            //strokeLines.Pen = new Pen(Brushes.Green, 300);
-            //strokeLines.Pen.StartLineCap = strokeLines.Pen.EndLineCap = PenLineCap.Round;
-
-
-
-            //strokeLines.Geometry = strokeGroup;
-            //group.Children.Add(strokeLines);
         }
 
-        private GeometryDrawing CreateGrid()
+        private void DrawTrack(int strokeIndex, int trackIndex, double t)
+        {
+            var drawings = group.Children;
+
+            var stroke = word.Strokes[strokeIndex];
+            var outline = new PathGeometry();
+            outline.Figures.Add(word.Strokes[strokeIndex].Outline);
+            var inverse = Geometry.Combine(background.Geometry, outline, GeometryCombineMode.Xor, null);
+
+            Point startPoint = stroke.Tracks[trackIndex].Point;
+            Point endPoint = stroke.Tracks[trackIndex + 1].Point;
+
+            double dx = endPoint.X - startPoint.X;
+            double dy = endPoint.Y - startPoint.Y;
+            double radius = 2 * stroke.Tracks[trackIndex].Size;
+
+            if (t > 1)
+            {
+                t = 1;
+            }
+
+            Point p = new Point(startPoint.X + dx * ((t * 1.2) - 0.2), startPoint.Y + dy * ((t * 1.2) - 0.2));
+
+            var circle = new EllipseGeometry(p, radius, radius);
+            var clipped = Geometry.Combine(circle, inverse, GeometryCombineMode.Exclude, null);
+            clipped = Geometry.Combine(clipped, background.Geometry, GeometryCombineMode.Intersect, null);
+            var drawing = new GeometryDrawing(Brushes.Black, null, clipped);
+            drawings.Add(drawing);
+        }
+
+        private void AnimateAll()
+        {
+            words = new List<StrokeWord>();
+            var files = Directory.GetFiles(@"..\..\..\XianDict\bin\Debug\utf8");
+            foreach (var file in files.Reverse())
+            {
+                using (FileStream fs = File.OpenRead(file))
+                {
+                    words.Add(new StrokeWord(fs));
+                }
+            }
+            enumerator = words.GetEnumerator();
+            AnimateNext();
+        }
+
+        private void AnimateNext()
+        {
+            if (enumerator.MoveNext())
+            {
+                word = enumerator.Current;
+                SetWord(word);
+                BeginAnimate();
+            }
+        }
+
+        private static GeometryDrawing CreateGrid(int canvasSize)
         {
             var grid = new GeometryDrawing();
             grid.Pen = new Pen(Brushes.Black, 1);
             var gridGroup = new GeometryGroup();
             var nw = new Point(0, 0);
-            var n = new Point(1075, 0);
-            var ne = new Point(2150, 0);
-            var w = new Point(0, 1075);
-            var e = new Point(2150, 1075);
-            var sw = new Point(0, 2150);
-            var s = new Point(1075, 2150);
-            var se = new Point(2150, 2150);
+            var n = new Point(canvasSize / 2, 0);
+            var ne = new Point(canvasSize, 0);
+            var w = new Point(0, canvasSize / 2);
+            var e = new Point(canvasSize, canvasSize / 2);
+            var sw = new Point(0, canvasSize);
+            var s = new Point(canvasSize / 2, canvasSize);
+            var se = new Point(canvasSize, canvasSize);
             gridGroup.Children.Add(new LineGeometry(nw, se));
             gridGroup.Children.Add(new LineGeometry(n, s));
             gridGroup.Children.Add(new LineGeometry(ne, sw));
@@ -223,6 +212,37 @@ namespace XianDict
             grid.Geometry = gridGroup;
 
             return grid;
+        }
+
+        //private void textBox_TextChanged(object sender, TextChangedEventArgs e)
+        //{
+        //    var utf8 = new UTF8Encoding();
+        //    var bytes = utf8.GetBytes(textBox.Text);
+        //    BitConverter.ToString(bytes);
+        //}
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private void animateButton_Click(object sender, RoutedEventArgs e)
+        {
+            Redraw();
+            BeginAnimate();
+        }
+
+        public static string getStrokeFile(char input)
+        {
+            return @"utf8\" + ((uint)input).ToString("X4") + ".xml";
+        }
+
+        public static bool hasStrokeFile(char input)
+        {
+            string utf8 = ((uint)input).ToString("X4");
+            return File.Exists(@"utf8\" + utf8 + ".xml");
         }
     }
 }

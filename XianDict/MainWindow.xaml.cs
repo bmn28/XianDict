@@ -172,7 +172,7 @@ namespace XianDict
                         popupIndex = 0;
                         popupNext.Visibility = popupPrev.Visibility = (Visibility)(new BooleanToVisibilityConverter().Convert(popupNumberOfEntries > 1, null, null, null));
                         popupPrev.IsEnabled = false;
-                        popupViewer.Document = DictionaryRenderer.Render(popupResults.First(), engine);
+                        popupViewer.Document = DictionaryRenderer.Render(popupResults.First(), engine, true);
                         popup.IsOpen = true;
 
                         ScrollPopupToTop();

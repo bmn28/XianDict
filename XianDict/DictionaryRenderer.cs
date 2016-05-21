@@ -16,13 +16,29 @@ namespace XianDict
 
         private static Regex rx = new Regex(@"`([^`~]+)~");
 
-        public static FlowDocument Render(Term term, DictionaryEngine engine)
+        public static FlowDocument Render(Term term, DictionaryEngine engine, bool minimal = false)
         {
             FlowDocument doc = new FlowDocument();
             
             Paragraph headword = ParseLinks(term.Traditional);
             headword.Style = (Style)rd["HeadwordStyle"];
+
+            if (!minimal && term.Traditional.Length == 1 && StrokeDisplay.hasStrokeFile(term.Traditional[0]))
+            {
+                var strokeOrderButton = new Button();
+                strokeOrderButton.Content = "Stroke Order";
+                strokeOrderButton.Margin = new Thickness(25,5,5,1);
+                strokeOrderButton.Padding = new Thickness(4);
+                strokeOrderButton.FontSize = 12;
+                strokeOrderButton.Click += ((obj, e) => { new StrokeDisplay(term.Traditional[0]).Show(); });
+                headword.Inlines.Add(new InlineUIContainer(strokeOrderButton));
+                //headword.Inlines.Add(new Run("\t"));
+                //Hyperlink h = new Hyperlink(new Run("Stroke order"));
+                //h.Click += ((obj, e) => { new StrokeDisplay(term.Traditional[0]).Show(); } );
+                //headword.Inlines.Add(h);
+            }
             doc.Blocks.Add(headword);
+
             Paragraph pinyin = new Paragraph(new Run(term.Pinyin));
             pinyin.Style = (Style)rd["PinyinStyle"];
             doc.Blocks.Add(pinyin);

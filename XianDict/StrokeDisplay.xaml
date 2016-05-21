@@ -5,16 +5,28 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:XianDict"
         mc:Ignorable="d"
-        Title="Stroke Order" Height="640" Width="640" WindowStyle="ToolWindow">
+        Title="Stroke Order" Height="320" Width="320" WindowStyle="ToolWindow">
     <Grid>
-        <Image>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="48" />
+        </Grid.RowDefinitions>
+        <Image Stretch="Uniform" StretchDirection="Both">
             <Image.Source>
-                <DrawingImage x:Name="drawingImage">
+                <DrawingImage x:Name="drawingImage" >
                     <DrawingImage.Drawing>
                         <DrawingGroup x:Name="group" />
                     </DrawingImage.Drawing>
                 </DrawingImage>
             </Image.Source>
         </Image>
-    </Grid>
+         <StackPanel Grid.Row="1" Orientation="Horizontal">
+            <StackPanel.Background>
+                <SolidColorBrush Color="{DynamicResource {x:Static SystemColors.ControlDarkColorKey}}"/>
+            </StackPanel.Background>
+            <!--<TextBox x:Name="textBox" Text="{Binding Path=Query, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="5" Width="38" Height="38" FontSize="28" TextAlignment="Center" TextChanged="textBox_TextChanged"/>-->
+            <Button x:Name="animateButton" Margin="5,5,5,5" Width="75" Content="Animate" Click="animateButton_Click" />
+
+        </StackPanel>
+   </Grid>
 </Window>

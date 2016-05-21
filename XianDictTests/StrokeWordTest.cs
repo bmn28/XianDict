@@ -28,8 +28,8 @@ namespace XianDictTests
         [TestMethod]
         public void Window_Test()
         {
-            StrokeDisplay d = new StrokeDisplay();
-            d.ShowDialog();
+            //StrokeDisplay d = new StrokeDisplay(@"..\..\..\XianDict\bin\Debug\utf8\83dc.xml");
+            //d.ShowDialog();
         }
     }
 }
