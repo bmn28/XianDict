@@ -19,6 +19,8 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.IO.IsolatedStorage;
 using System.Windows.Controls.Primitives;
+using System.Runtime.InteropServices;
+using System.Windows.Interop;
 
 namespace XianDict
 {
@@ -67,7 +69,6 @@ namespace XianDict
                 if (query == null || !query.Equals(value))
                 {
                     query = value;
-
                 }
                 OnPropertyChanged("Query");
             }
@@ -76,6 +77,13 @@ namespace XianDict
         private int popupNumberOfEntries;
         private IEnumerable<Term> popupResults;
 
+        IntPtr nextClipboardViewer;
+        ClipboardViewer clipboardViewer;
+        GridLength clipboardHeight = GridLength.Auto;
+        GridLength radicalsHeight = new GridLength(300);
+
+        RadicalInput radicalInput;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -83,9 +91,10 @@ namespace XianDict
             results = new ObservableCollection<Term>();
             DictionaryRenderer.rd = Resources;
             this.DataContext = this;
+            clipboardViewer = new ClipboardViewer(this);
+            radicalInput = new RadicalInput(this);
 
             fdViewer.AddHandler(MouseUpEvent, new MouseButtonEventHandler(fdViewer_MouseUp), true);
-            //fdViewer.Selection.Changed += fdViewer_MouseUp;
         }
 
         private async void Search(string query)
@@ -134,6 +143,7 @@ namespace XianDict
         {
             Properties.Settings.Default.LastQuery = Query;
             Properties.Settings.Default.Save();
+            ChangeClipboardChain(new WindowInteropHelper(this).Handle, nextClipboardViewer);
             base.OnClosed(e);
         }
 
@@ -150,8 +160,9 @@ namespace XianDict
             base.OnInitialized(e);
         }
 
-        private async void fdViewer_MouseUp(object sender, MouseButtonEventArgs e)
+        public async void fdViewer_MouseUp(object sender, MouseButtonEventArgs e)
         {
+            var fdViewer = (FlowDocumentScrollViewer)sender;
             if (fdViewer.Selection != null)
             {
                 var selectionStart = fdViewer.Selection.Start;
@@ -232,47 +243,171 @@ namespace XianDict
         private void Thumb_DragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e)
         {
             Thumb t = (Thumb)sender;
-
             t.Cursor = Cursors.SizeNWSE;
+            popupViewer.Height = popupViewer.ActualHeight;
         }
 
         private void Thumb_DragDelta(object sender, System.Windows.Controls.Primitives.DragDeltaEventArgs e)
         {
             double yadjust = popupViewer.Height + e.VerticalChange;
-
             double xadjust = popupViewer.Width + e.HorizontalChange;
-
+            popupViewer.MaxHeight = double.PositiveInfinity;
             if ((xadjust >= 0) && (yadjust >= 0))
-
             {
-
                 popupViewer.Width = xadjust;
-
                 popupViewer.Height = yadjust;
-
             }
         }
 
         private void Thumb_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
         {
             Thumb t = (Thumb)sender;
-
             t.Cursor = null;
+            if (popupViewer.Height < 768)
+            {
+                popupViewer.MaxHeight = 768;
+            }
         }
 
         private void Thumb_MouseEnter(object sender, MouseEventArgs e)
         {
             Thumb t = (Thumb)sender;
-
             t.Cursor = Cursors.SizeNWSE;
         }
 
         private void Thumb_MouseLeave(object sender, MouseEventArgs e)
         {
             Thumb t = (Thumb)sender;
-
             t.Cursor = null;
         }
+
+        private void DisplayClipboardData()
+        {
+            try
+            {
+                clipboardViewer.UpdateText(Clipboard.GetText());
+            }
+            catch (Exception)
+            {
+                // ignore
+            }
+        }
+
+        private void clipboardToggle_Checked(object sender, RoutedEventArgs e)
+        {
+            radicalsToggle.IsChecked = false;
+            frame.Content = clipboardViewer;
+            frame.Visibility = Visibility.Visible;
+            frameGridSplitter.Visibility = Visibility.Visible;
+            panelRow.Height = clipboardHeight;
+        }
+
+        private void clipboardToggle_Unchecked(object sender, RoutedEventArgs e)
+        {
+            clipboardHeight = panelRow.Height;
+            panelRow.Height = GridLength.Auto;
+            frame.Visibility = Visibility.Collapsed;
+            frameGridSplitter.Visibility = Visibility.Collapsed;
+        }
+
+        private void radicalsToggle_Checked(object sender, RoutedEventArgs e)
+        {
+            clipboardToggle.IsChecked = false;
+            frame.Content = radicalInput;
+            frame.Visibility = Visibility.Visible;
+            frameGridSplitter.Visibility = Visibility.Visible;
+            panelRow.Height = radicalsHeight;
+        }
+
+        private void radicalsToggle_Unchecked(object sender, RoutedEventArgs e)
+        {
+            radicalsHeight = panelRow.Height;
+            panelRow.Height = GridLength.Auto;
+            frame.Visibility = Visibility.Collapsed;
+            frameGridSplitter.Visibility = Visibility.Collapsed;
+        }
+
+        public void AppendToSearch(string input)
+        {
+            searchBox.Text += input;
+        }
+
+        public void Backspace()
+        {
+            if (searchBox.Text.Length > 0)
+            {
+                searchBox.Text = searchBox.Text.Remove(searchBox.Text.Length - 1);
+            }
+        }
+
+        private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            panelRow.MaxHeight = Math.Max(0, this.ActualHeight - 130);
+        }
+
+        #region Win32 Clipboard functionality
+
+        [DllImport("User32.dll")]
+        protected static extern int SetClipboardViewer(int hWndNewViewer);
+
+        [DllImport("User32.dll", CharSet = CharSet.Auto)]
+        protected static extern bool ChangeClipboardChain(IntPtr hWndRemove, IntPtr hWndNewNext);
+        [DllImport("User32.dll", CharSet = CharSet.Auto)]
+        protected static extern int SendMessage(IntPtr hwnd, int wMsg, IntPtr wParam, IntPtr lParam);
+
+
+
+        /// <summary>
+        /// AddHook Handle WndProc messages in WPF
+        /// This cannot be done in a Window's constructor as a handle window handle won't at that point, so there won't be a HwndSource.
+        /// </summary>
+        /// <param name="e"></param>
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+
+            var hwndSource = PresentationSource.FromVisual(this) as HwndSource;
+            if (hwndSource != null)
+            {
+                hwndSource.AddHook(WndProc);
+
+                nextClipboardViewer = (IntPtr)SetClipboardViewer((int)new WindowInteropHelper(this).Handle);
+            }
+        }
+
+        /// <summary>
+        /// WndProc matches the HwndSourceHook delegate signature so it can be passed to AddHook() as a callback. This is the same as overriding a Windows.Form's WncProc method.
+        /// </summary>
+        /// <param name="hwnd">The window handle</param>
+        /// <param name="msg">The message ID</param>
+        /// <param name="wParam">The message's wParam value, historically used in the win32 api for handles and integers</param>
+        /// <param name="lParam">The message's lParam value, historically used in the win32 api to pass pointers</param>
+        /// <param name="handled">A value that indicates whether the message was handled</param>
+        /// <returns></returns>
+        private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            const int WM_DRAWCLIPBOARD = 0x0308;
+            const int WM_CHANGECBCHAIN = 0x030D;
+
+            switch (msg)
+            {
+                case WM_DRAWCLIPBOARD:
+                    DisplayClipboardData();
+                    SendMessage(nextClipboardViewer, msg, wParam, lParam);
+                    break;
+                case WM_CHANGECBCHAIN:
+                    if (wParam == nextClipboardViewer)
+                        nextClipboardViewer = lParam;
+                    else
+                        SendMessage(nextClipboardViewer, msg, wParam, lParam);
+                    break;
+                default:
+                    break;
+            }
+
+            return IntPtr.Zero;
+        }
+        #endregion
     }
 
     public class DefinitionListToConverter : IValueConverter

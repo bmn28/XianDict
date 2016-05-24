@@ -81,7 +81,10 @@ namespace XianDict
 
                 }
             }
-            return results.OrderBy(r => r.Length).ThenBy(r => r.PinyinNumbered.Length).ThenByDescending(r => r.Score, freqComparer).ThenBy(r => r.PinyinNumbered);
+            return results.OrderBy(r => r.Length)
+                .ThenBy(r => r.PinyinNumbered != null ? r.PinyinNumbered.Length : int.MaxValue)
+                .ThenByDescending(r => r.Score, freqComparer)
+                .ThenBy(r => r.PinyinNumbered);
         }
 
         public async Task<IEnumerable<Term>> SearchExact(CancellationToken ct, string query)

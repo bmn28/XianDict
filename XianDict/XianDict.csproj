@@ -86,9 +86,15 @@
     </ApplicationDefinition>
     <Compile Include="CartesianIterator.cs" />
     <Compile Include="Cedict.cs" />
+    <Compile Include="ClipboardViewer.xaml.cs">
+      <DependentUpon>ClipboardViewer.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Dict.cs" />
     <Compile Include="DictionaryRenderer.cs" />
     <Compile Include="Frequency.cs" />
+    <Compile Include="RadicalInput.xaml.cs">
+      <DependentUpon>RadicalInput.xaml</DependentUpon>
+    </Compile>
     <Compile Include="StrokeDisplay.xaml.cs">
       <DependentUpon>StrokeDisplay.xaml</DependentUpon>
     </Compile>
@@ -100,6 +106,10 @@
     <Compile Include="SQLite.cs" />
     <Compile Include="SQLiteAsync.cs" />
     <Compile Include="Trie.cs" />
+    <Page Include="ClipboardViewer.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -113,6 +123,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="RadicalInput.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="StrokeDisplay.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -164,6 +178,12 @@
     <Resource Include="Resources\BulletList_24x.png" />
     <Resource Include="Resources\Grid_32x.png" />
     <Resource Include="Resources\TaskList_32x.png" />
+    <None Include="hanzibyradicals.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="radicals.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <Content Include="sqlite3.def">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
