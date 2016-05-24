@@ -89,6 +89,7 @@ namespace XianDict
             InitializeComponent();
             engine = new DictionaryEngine();
             results = new ObservableCollection<Term>();
+            this.Resources.MergedDictionaries.Add((ResourceDictionary)Application.LoadComponent(new Uri("DefaultSkin.xaml", UriKind.RelativeOrAbsolute)));
             DictionaryRenderer.rd = Resources;
             this.DataContext = this;
             clipboardViewer = new ClipboardViewer(this);

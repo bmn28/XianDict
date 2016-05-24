@@ -1,0 +1,206 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:XianDict" >
+    <Style x:Key="ParagraphStyle" TargetType="Paragraph" />
+    <Style x:Key="HeadwordStyle" TargetType="Paragraph">
+        <Setter Property="FontSize" Value="36" />
+        <Setter Property="FontFamily" Value="Microsoft JhengHei" />
+        <Setter Property="Margin" Value="0" />
+    </Style>
+    <Style x:Key="TypeStyle" TargetType="Paragraph">
+        <Setter Property="FontFamily" Value="Microsoft JhengHei" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Margin" Value="0" />
+    </Style>
+    <Style x:Key="HeadingStyle" TargetType="Paragraph">
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="Foreground" Value="DodgerBlue" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="FontFamily" Value="Segoe UI" />
+    </Style>
+    <Style x:Key="PinyinStyle" TargetType="Paragraph">
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="FontFamily" Value="Microsoft JhengHei" />
+    </Style>
+    <Style x:Key="QuoteStyle" TargetType="Paragraph">
+        <Setter Property="FontFamily" Value="Microsoft JhengHei" />
+    </Style>
+    <Style x:Key="ExampleStyle" TargetType="Paragraph">
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="FontFamily" Value="Microsoft JhengHei" />
+    </Style>
+    <Style x:Key="EnglishParagraph" TargetType="Paragraph">
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontFamily" Value="Segoe UI" />
+    </Style>
+    <Style TargetType="List">
+        <Setter Property="FontFamily" Value="Segoe UI" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="Padding" Value="25,0,0,0" />
+        <Setter Property="Margin" Value="0" />
+    </Style>
+    <Style TargetType="ListItem">
+        <Setter Property="FontFamily" Value="Microsoft JhengHei" />
+        <Setter Property="FontWeight" Value="Regular" />
+        <Setter Property="Margin" Value="0" />
+    </Style>
+    <Style TargetType="Hyperlink">
+        <Setter Property="Foreground" Value="Black" />
+        <Setter Property="TextDecorations" Value="" />
+    </Style>
+    <Style TargetType="Paragraph">
+        <Setter Property="FontSize" Value="20" />
+    </Style>
+    <Style TargetType="ListBoxItem" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+        <Style.Resources>
+            <ResourceDictionary />
+        </Style.Resources>
+        <Setter Property="UIElement.SnapsToDevicePixels">
+            <Setter.Value>
+                <s:Boolean>True</s:Boolean>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Control.Padding">
+            <Setter.Value>
+                <Thickness>4,1,4,1</Thickness>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Control.HorizontalContentAlignment">
+            <Setter.Value>
+                <Binding Path="HorizontalContentAlignment" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=ItemsControl, AncestorLevel=1}" />
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Control.VerticalContentAlignment">
+            <Setter.Value>
+                <Binding Path="VerticalContentAlignment" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=ItemsControl, AncestorLevel=1}" />
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Panel.Background">
+            <Setter.Value>
+                <SolidColorBrush>#00FFFFFF</SolidColorBrush>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Border.BorderBrush">
+            <Setter.Value>
+                <SolidColorBrush>#00FFFFFF</SolidColorBrush>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Border.BorderThickness">
+            <Setter.Value>
+                <Thickness>1,1,1,1</Thickness>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="FrameworkElement.FocusVisualStyle">
+            <Setter.Value>
+                <Style TargetType="IFrameworkInputElement">
+                    <Style.Resources>
+                        <ResourceDictionary />
+                    </Style.Resources>
+                    <Setter Property="Control.Template">
+                        <Setter.Value>
+                            <ControlTemplate>
+                                <Rectangle Stroke="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" StrokeThickness="1" StrokeDashArray="1 2" Margin="2,2,2,2" SnapsToDevicePixels="True" />
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="Control.Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ListBoxItem">
+                    <StackPanel>
+                        <Separator x:Name="Separator"/>
+                        <Border BorderThickness="{TemplateBinding Border.BorderThickness}" Padding="{TemplateBinding Control.Padding}" BorderBrush="{TemplateBinding Border.BorderBrush}" Background="{TemplateBinding Panel.Background}" Name="Bd" SnapsToDevicePixels="True">
+                            <ContentPresenter Content="{TemplateBinding ContentControl.Content}" ContentTemplate="{TemplateBinding ContentControl.ContentTemplate}" ContentStringFormat="{TemplateBinding ContentControl.ContentStringFormat}" HorizontalAlignment="{TemplateBinding Control.HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding Control.VerticalContentAlignment}" SnapsToDevicePixels="{TemplateBinding UIElement.SnapsToDevicePixels}" />
+                        </Border>
+                    </StackPanel>
+                    <ControlTemplate.Triggers>
+                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource PreviousData}}" Value="{x:Null}">
+                            <Setter Property="Visibility" TargetName="Separator" Value="Collapsed"/>
+                        </DataTrigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="UIElement.IsMouseOver">
+                                    <Condition.Value>
+                                        <s:Boolean>True</s:Boolean>
+                                    </Condition.Value>
+                                </Condition>
+                            </MultiTrigger.Conditions>
+                            <Setter Property="Panel.Background" TargetName="Bd">
+                                <Setter.Value>
+                                    <SolidColorBrush>#1F26A0DA</SolidColorBrush>
+                                </Setter.Value>
+                            </Setter>
+                            <Setter Property="Border.BorderBrush" TargetName="Bd">
+                                <Setter.Value>
+                                    <SolidColorBrush>#A826A0DA</SolidColorBrush>
+                                </Setter.Value>
+                            </Setter>
+                        </MultiTrigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="Selector.IsSelectionActive">
+                                    <Condition.Value>
+                                        <s:Boolean>False</s:Boolean>
+                                    </Condition.Value>
+                                </Condition>
+                                <Condition Property="Selector.IsSelected">
+                                    <Condition.Value>
+                                        <s:Boolean>True</s:Boolean>
+                                    </Condition.Value>
+                                </Condition>
+                            </MultiTrigger.Conditions>
+                            <Setter Property="Panel.Background" TargetName="Bd">
+                                <Setter.Value>
+                                    <SolidColorBrush>#3DDADADA</SolidColorBrush>
+                                </Setter.Value>
+                            </Setter>
+                            <Setter Property="Border.BorderBrush" TargetName="Bd">
+                                <Setter.Value>
+                                    <SolidColorBrush>#FFDADADA</SolidColorBrush>
+                                </Setter.Value>
+                            </Setter>
+                        </MultiTrigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="Selector.IsSelectionActive">
+                                    <Condition.Value>
+                                        <s:Boolean>True</s:Boolean>
+                                    </Condition.Value>
+                                </Condition>
+                                <Condition Property="Selector.IsSelected">
+                                    <Condition.Value>
+                                        <s:Boolean>True</s:Boolean>
+                                    </Condition.Value>
+                                </Condition>
+                            </MultiTrigger.Conditions>
+                            <Setter Property="Panel.Background" TargetName="Bd">
+                                <Setter.Value>
+                                    <SolidColorBrush>#3D26A0DA</SolidColorBrush>
+                                </Setter.Value>
+                            </Setter>
+                            <Setter Property="Border.BorderBrush" TargetName="Bd">
+                                <Setter.Value>
+                                    <SolidColorBrush>#FF26A0DA</SolidColorBrush>
+                                </Setter.Value>
+                            </Setter>
+                        </MultiTrigger>
+                        <Trigger Property="UIElement.IsEnabled">
+                            <Setter Property="TextElement.Foreground" TargetName="Bd">
+                                <Setter.Value>
+                                    <DynamicResource ResourceKey="{x:Static SystemColors.GrayTextBrushKey}" />
+                                </Setter.Value>
+                            </Setter>
+                            <Trigger.Value>
+                                <s:Boolean>False</s:Boolean>
+                            </Trigger.Value>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+</ResourceDictionary>
