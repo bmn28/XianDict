@@ -68,15 +68,15 @@
                                 <TextBlock Text=" " />
                                 <TextBlock Text="{Binding Pinyin}" VerticalAlignment="Bottom"/>
                             </WrapPanel>
-                            <WrapPanel MaxHeight="48" >
-                                <!--<ItemsControl ItemsSource="{Binding Definitions[0]}">
+                            <!--<WrapPanel MaxHeight="48" >
+                                <ItemsControl ItemsSource="{Binding Definitions[0]}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
                                             <TextBlock Text="{Binding}" TextWrapping="Wrap" TextTrimming="CharacterEllipsis" />
                                         </DataTemplate>
                                 </ItemsControl.ItemTemplate>
-                            </ItemsControl>-->
-                            </WrapPanel>
+                            </ItemsControl>
+                            </WrapPanel>-->
 
                         </StackPanel>
 
