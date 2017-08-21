@@ -90,7 +90,7 @@ namespace XianDict
             engine = new DictionaryEngine();
             results = new ObservableCollection<Term>();
             this.Resources.MergedDictionaries.Add((ResourceDictionary)Application.LoadComponent(new Uri("DefaultSkin.xaml", UriKind.RelativeOrAbsolute)));
-            this.Resources.MergedDictionaries.Add((ResourceDictionary)Application.LoadComponent(new Uri("DarkSkin.xaml", UriKind.RelativeOrAbsolute)));
+            //this.Resources.MergedDictionaries.Add((ResourceDictionary)Application.LoadComponent(new Uri("DarkSkin.xaml", UriKind.RelativeOrAbsolute)));
             DictionaryRenderer.rd = Resources;
             this.DataContext = this;
             clipboardViewer = new ClipboardViewer(this);
@@ -119,12 +119,6 @@ namespace XianDict
             {
                 // ok
             }
-        }
-
-        private void button_Click(object sender, RoutedEventArgs e)
-        {
-            searchMode = (SearchMode)(((int)searchMode + 1) % Enum.GetNames(typeof(SearchMode)).Length);
-            button.Content = searchMode.ToString();
         }
 
         private void searchBox_TextChanged(object sender, TextChangedEventArgs e)
