@@ -23,35 +23,19 @@
             <Grid Margin="5">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <TextBox x:Name="searchBox" Grid.Column="0" Height="32" Width="Auto" Margin="0" TextWrapping="Wrap" VerticalAlignment="Top"
                  Text="{Binding Path=Query, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" FontSize="20" TextChanged="searchBox_TextChanged" />
-                <Button x:Name="button" Grid.Column="1" Margin="5,0,0,0" VerticalAlignment="Top" Height="32" Width="32" HorizontalAlignment="Left" Click="button_Click" Padding="1" FontFamily="Microsoft JhengHei" FontSize="20" FontWeight="Bold">
-                    中
-                </Button>
             </Grid>
             <Grid Grid.Row="1" Height="32" Margin="5,0,5,5">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <ToggleButton x:Name="historyToggle" Grid.Column="0" ToolTip="History" BorderThickness="1,1,0,1">
-                    <Image Source="Resources/Time_24x.png" Stretch="None" />
-                </ToggleButton>
-                <ToggleButton x:Name="listsToggle" Grid.Column="1" ToolTip="Lists" BorderThickness="1,1,0,1">
-                    <Image Source="Resources/BulletList_24x.png" Width="26" />
-                </ToggleButton>
-                <ToggleButton x:Name="clipboardToggle" Grid.Column="2" ToolTip="Clipboard" BorderThickness="1,1,0,1" Checked="clipboardToggle_Checked" Unchecked="clipboardToggle_Unchecked">
+                <ToggleButton x:Name="clipboardToggle" Grid.Column="0" ToolTip="Clipboard" BorderThickness="1,1,0,1" Checked="clipboardToggle_Checked" Unchecked="clipboardToggle_Unchecked">
                     <Image Source="Resources/TaskList_32x.png" Height="25" Margin="0,0,0,1" />
                 </ToggleButton>
-                <ToggleButton x:Name="handwriteToggle" Grid.Column="3"  ToolTip="Handwrite" BorderThickness="1,1,0,1">
-                    <Image Source="Resources/InkBrush_25x.png" Stretch="None" />
-                </ToggleButton>
-                <ToggleButton x:Name="radicalsToggle" Grid.Column="4"  ToolTip="Radicals" Checked="radicalsToggle_Checked" Unchecked="radicalsToggle_Unchecked">
+                <ToggleButton x:Name="radicalsToggle" Grid.Column="1"  ToolTip="Radicals" Checked="radicalsToggle_Checked" Unchecked="radicalsToggle_Unchecked">
                     <Image Source="Resources/Grid_32x.png" />
                 </ToggleButton>
             </Grid>

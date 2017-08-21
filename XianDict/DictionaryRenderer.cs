@@ -33,18 +33,6 @@ namespace XianDict
                 strokeOrderButton.Click += ((obj, e) => { new StrokeDisplay(term.Traditional[0]).Show(); });
                 headword.Inlines.Add(new InlineUIContainer(strokeOrderButton));
             }
-            if (!minimal)
-            {
-                var audioButton = new Button();
-                audioButton.Content = "Audio";
-                audioButton.Margin = new Thickness(5, 5, 5, 1);
-                audioButton.Padding = new Thickness(4);
-                audioButton.FontSize = 12;
-                audioButton.Click += ((obj, e) => { });
-                var audioContainer = new InlineUIContainer(audioButton);
-                headword.Inlines.Add(audioContainer);
-            }
-
 
             doc.Blocks.Add(headword);
 
