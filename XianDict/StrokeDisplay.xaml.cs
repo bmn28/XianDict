@@ -170,7 +170,7 @@ namespace XianDict
         private void AnimateAll()
         {
             words = new List<StrokeWord>();
-            var files = Directory.GetFiles(@"..\..\..\XianDict\bin\Debug\utf8");
+            var files = Directory.GetFiles(@"utf8");
             foreach (var file in files.Reverse())
             {
                 using (FileStream fs = File.OpenRead(file))
